@@ -1,7 +1,8 @@
 import { View, Text, StyleSheet, TextInput, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
+import { useNavigation } from '@react-navigation/native';
 const HomeScreen = () => {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -10,8 +11,8 @@ const HomeScreen = () => {
         <TouchableOpacity style={styles.childButton}>
           <Text style={styles.childText}>child ▼</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.bagButton}>
-          <Ionicons name="bag-outline" size={24} color="white" />
+        <TouchableOpacity style={styles.bagButton} onPress={() => navigation.navigate('Diary')}>
+          <Ionicons name="document-outline" size={24} color="white" />
         </TouchableOpacity>
       </View>
 

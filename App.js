@@ -8,6 +8,7 @@ import PostScreen from './screens/PostScreen';
 import NotificationScreen from './screens/NotificationScreen';
 import PassResetScreen from './screens/PassReset';
 import PasswordResetNoticeScreen from './screens/NotiReset';
+import DiaryScreen from './screens/DiarySrceen';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -63,6 +64,9 @@ export default function App() {
           <Stack.Screen options={{ headerShown: false }} name="Menu" component={TabNavigator} />
         <Stack.Screen options={{ headerShown: false }} name="PassReset" component={PassResetScreen} />
         <Stack.Screen options={{ headerShown: false }} name="NotiReset" component={PasswordResetNoticeScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="Diary" component={DiaryScreen} />
+
         </Stack.Navigator>
       </NavigationContainer>
     </>
