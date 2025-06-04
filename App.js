@@ -6,6 +6,8 @@ import HomeScreen from './screens/HomeSrceen';
 import SettingsScreen from './screens/SettingScreen';
 import PostScreen from './screens/PostScreen';
 import NotificationScreen from './screens/NotificationScreen';
+import PassResetScreen from './screens/PassReset';
+
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -57,7 +59,7 @@ export default function App() {
           <Stack.Screen options={{ headerShown: false }} name="Login" component={LoginScreen} />
           <Stack.Screen options={{ headerShown: false }} name="Register" component={RegisterScreen} />
           <Stack.Screen options={{ headerShown: false }} name="Menu" component={TabNavigator} />
-        
+        <Stack.Screen options={{ headerShown: false }} name="PassReset" component={PassResetScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

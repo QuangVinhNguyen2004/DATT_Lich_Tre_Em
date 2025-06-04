@@ -14,7 +14,11 @@ const LoginScreen = () => {
       </TouchableOpacity>
 
       <Text style={styles.signupText}>
-        Chưa có Tài khoản? <TouchableOpacity  onPress={() => navigation.navigate('Register')}>
+        <TouchableOpacity  onPress={() => navigation.navigate('PassReset')}>
+        <Text style={styles.signupLink}>Quên mật khẩu   </Text>
+      </TouchableOpacity>
+
+       <TouchableOpacity  onPress={() => navigation.navigate('Register')}>
         <Text style={styles.signupLink}>Tạo ngay!</Text>
       </TouchableOpacity>
       </Text>
