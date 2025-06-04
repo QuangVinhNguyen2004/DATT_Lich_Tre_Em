@@ -14,7 +14,9 @@ const LoginScreen = () => {
       </TouchableOpacity>
 
       <Text style={styles.signupText}>
-        Chưa có Tài khoản? <Text style={styles.signupLink}>Tạo ngay!</Text>
+        Chưa có Tài khoản? <TouchableOpacity  onPress={() => navigation.navigate('Register')}>
+        <Text style={styles.signupLink}>Tạo ngay!</Text>
+      </TouchableOpacity>
       </Text>
 
     <View style={styles.LoginButton}>
@@ -79,6 +81,7 @@ const styles = StyleSheet.create({
   signupLink: {
     color: '#007bff',
     fontWeight: 'bold',
+    paddingTop:10,
   },
   LoginButton:{
     marginTop:30,
