@@ -7,6 +7,7 @@ import SettingsScreen from './screens/SettingScreen';
 import PostScreen from './screens/PostScreen';
 import NotificationScreen from './screens/NotificationScreen';
 import PassResetScreen from './screens/PassReset';
+import PasswordResetNoticeScreen from './screens/NotiReset';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -46,6 +47,7 @@ const TabNavigator = () => {
       <Tab.Screen name="Notification" options={{ headerShown: false }} component={NotificationScreen} />
       <Tab.Screen name="Post" options={{ headerShown: false }} component={PostScreen} />
       <Tab.Screen name="Setting" options={{ headerShown: false }} component={SettingsScreen} />
+
     </Tab.Navigator>
   );
 };
@@ -60,6 +62,7 @@ export default function App() {
           <Stack.Screen options={{ headerShown: false }} name="Register" component={RegisterScreen} />
           <Stack.Screen options={{ headerShown: false }} name="Menu" component={TabNavigator} />
         <Stack.Screen options={{ headerShown: false }} name="PassReset" component={PassResetScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="NotiReset" component={PasswordResetNoticeScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

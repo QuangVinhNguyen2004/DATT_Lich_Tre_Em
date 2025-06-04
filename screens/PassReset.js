@@ -39,7 +39,7 @@ const PassResetScreen = ({ navigation }) => {
       />
 
       {/* Nút tiếp tục */}
-      <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('NotiReset')}>
         <Text style={styles.buttonText}>Tiếp tục</Text>
       </TouchableOpacity>
     </SafeAreaView>
