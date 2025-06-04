@@ -9,6 +9,7 @@ import NotificationScreen from './screens/NotificationScreen';
 import PassResetScreen from './screens/PassReset';
 import PasswordResetNoticeScreen from './screens/NotiReset';
 import DiaryScreen from './screens/DiarySrceen';
+import UpdateAccScreen from './screens/UpdateAccScreen';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -66,6 +67,8 @@ export default function App() {
         <Stack.Screen options={{ headerShown: false }} name="NotiReset" component={PasswordResetNoticeScreen} />
         <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeScreen} />
         <Stack.Screen options={{ headerShown: false }} name="Diary" component={DiaryScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="Setting" component={SettingsScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="UpdateAcc" component={UpdateAccScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>

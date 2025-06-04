@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
+import { useNavigation } from '@react-navigation/native';
 const SettingsScreen = () => {
+   const navigation = useNavigation();
   const user = {
     name: 'Nguyễn Thị Tuyết',
     email: 'tuyet011@gmail.com',
@@ -32,7 +33,7 @@ const SettingsScreen = () => {
             <Text style={styles.email}>{user.email}</Text>
             <Text style={styles.phone}>{user.phone}</Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('UpdateAcc')}>
             <Text style={styles.editText}>Chỉnh sửa</Text>
           </TouchableOpacity>
         </View>
