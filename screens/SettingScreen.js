@@ -10,13 +10,7 @@ const SettingsScreen = () => {
     phone: '09632567277',
   };
 
-  const options = [
-    'Quản lý tài khoản phụ',
-    'Nhật ký',
-    'Thanh toán gia hạn',
-    'Quản lý danh sách trẻ',
-    'Trợ giúp',
-  ];
+  
 
   return (
     <View style={styles.container}>
@@ -38,12 +32,30 @@ const SettingsScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {options.map((item, index) => (
-          <TouchableOpacity key={index} style={styles.optionItem}>
-            <Text style={styles.optionText}>{item}</Text>
+        <TouchableOpacity  style={styles.optionItem}>
+            <Text style={styles.optionText}>Quản lý tài khoản phụ</Text>
             <Ionicons name="chevron-forward-outline" size={20} color="#000" />
           </TouchableOpacity>
-        ))}
+
+          <TouchableOpacity  style={styles.optionItem}>
+            <Text style={styles.optionText}>Nhật ký</Text>
+            <Ionicons name="chevron-forward-outline" size={20} color="#000" />
+          </TouchableOpacity>
+
+          <TouchableOpacity  style={styles.optionItem} onPress={() => navigation.navigate('Pay')}>
+            <Text style={styles.optionText}>Thanh toán gia hạn</Text>
+            <Ionicons name="chevron-forward-outline" size={20} color="#000" />
+          </TouchableOpacity>
+
+          <TouchableOpacity  style={styles.optionItem}>
+            <Text style={styles.optionText}>Quản lý danh sách trẻ </Text>
+            <Ionicons name="chevron-forward-outline" size={20} color="#000" />
+          </TouchableOpacity>
+
+          <TouchableOpacity  style={styles.optionItem}>
+            <Text style={styles.optionText}>Trợ giúp</Text>
+            <Ionicons name="chevron-forward-outline" size={20} color="#000" />
+          </TouchableOpacity>
 
         <TouchableOpacity style={styles.logoutBtn}>
           <Text style={styles.logoutText}>Đăng xuất</Text>
