@@ -7,6 +7,7 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
   const [activity, setActivity] = useState('Cho ăn');
   const [desc, setDesc] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -64,7 +65,7 @@ const HomeScreen = () => {
           <Text>Lặp lại: có</Text>
 
           <View style={styles.recentButtons}>
-            <TouchableOpacity style={styles.deleteBtn}>
+            <TouchableOpacity style={styles.deleteBtn} onPress={() => setConfirmDeleteVisible(true)}>
               <Text style={styles.btnText}>Xóa</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.updateBtn} onPress={() => setEditModalVisible(true)}>
@@ -179,6 +180,35 @@ const HomeScreen = () => {
           }}
         >
           <Text style={styles.btnText}>Sửa</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
+
+{/* Modal xác nhận xóa */}
+<Modal animationType="fade" transparent={true} visible={confirmDeleteVisible}>
+  <View style={styles.modalOverlay}>
+    <View style={styles.confirmBox}>
+      <Text style={styles.modalTitle}>Xác nhận</Text>
+      <Text style={{ textAlign: 'center', marginBottom: 20 }}>
+        Bạn có chắc muốn xóa hoạt động này không?
+      </Text>
+      <View style={styles.modalButtons}>
+        <TouchableOpacity
+          style={styles.cancelBtn}
+          onPress={() => setConfirmDeleteVisible(false)}
+        >
+          <Text style={styles.btnText}>Hủy</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.addBtn}
+          onPress={() => {
+            // TODO: xử lý xóa hoạt động tại đây
+            setConfirmDeleteVisible(false);
+          }}
+        >
+          <Text style={styles.btnText}>Xóa</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -368,5 +398,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 30,
   },
+confirmBox: {
+  backgroundColor: '#fff',
+  borderRadius: 20,
+  padding: 24,
+  width: '85%',
+  elevation: 10,
+  alignItems: 'center',
+},
 
 });
