@@ -1,8 +1,17 @@
-import { View, Text, StyleSheet, TextInput, Image, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, Image, ScrollView, TouchableOpacity,Modal,
+  Pressable, } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 const HomeScreen = () => {
   const navigation = useNavigation();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [activity, setActivity] = useState('Cho ăn');
+  const [desc, setDesc] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [duration, setDuration] = useState('');
+  const [repeat, setRepeat] = useState('Có');
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -65,9 +74,62 @@ const HomeScreen = () => {
       </View>
 
       {/* Nút thêm */}
-      <TouchableOpacity style={styles.fab}>
+      <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
         <Ionicons name="add" size={32} color="white" />
       </TouchableOpacity>
+
+      {/* Modal Thêm hoạt động */}
+      <Modal animationType="slide" transparent={true} visible={modalVisible}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Thêm hoạt động</Text>
+
+            <Text style={styles.label}>Hoạt động:</Text>
+            <TouchableOpacity style={styles.selectBox}>
+              <Text>{activity} ▼</Text>
+            </TouchableOpacity>
+
+            <TextInput
+              placeholder="Nhập mô tả"
+              style={styles.modalInput}
+              value={desc}
+              onChangeText={setDesc}
+            />
+            <TextInput
+              placeholder="Nhập tg bắt đầu"
+              style={styles.modalInput}
+              value={startTime}
+              onChangeText={setStartTime}
+            />
+            <TextInput
+              placeholder="Nhập tg thực hiện"
+              style={styles.modalInput}
+              value={duration}
+              onChangeText={setDuration}
+            />
+
+            <Text style={styles.label}>Lặp lại:</Text>
+            <TouchableOpacity style={styles.selectBox}>
+              <Text>{repeat} ▼</Text>
+            </TouchableOpacity>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
+                <Text style={styles.btnText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.addBtn}
+                onPress={() => {
+                  // TODO: xử lý thêm hoạt động ở đây
+                  setModalVisible(false);
+                }}
+              >
+                <Text style={styles.btnText}>Thêm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -198,4 +260,58 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 4,
   },
+    modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#FADADA',
+    borderRadius: 24,
+    padding: 20,
+    width: '90%',
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  label: {
+    fontWeight: '600',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  selectBox: {
+    backgroundColor: '#f1f1f1',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 10,
+  },
+  modalInput: {
+    backgroundColor: '#f1f1f1',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 10,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  cancelBtn: {
+    backgroundColor: '#f66',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+  },
+  addBtn: {
+    backgroundColor: '#6f6',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+  },
+
 });
