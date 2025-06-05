@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
   const [activity, setActivity] = useState('Cho ăn');
   const [desc, setDesc] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -66,7 +67,7 @@ const HomeScreen = () => {
             <TouchableOpacity style={styles.deleteBtn}>
               <Text style={styles.btnText}>Xóa</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.updateBtn}>
+            <TouchableOpacity style={styles.updateBtn} onPress={() => setEditModalVisible(true)}>
               <Text style={styles.btnText}>Cập nhật</Text>
             </TouchableOpacity>
           </View>
@@ -130,6 +131,60 @@ const HomeScreen = () => {
           </View>
         </View>
       </Modal>
+
+    {/*Modal cập nhật */}
+<Modal animationType="slide" transparent={true} visible={editModalVisible}>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalTitle}>Cập nhật hoạt động</Text>
+
+      <Text style={styles.label}>Hoạt động:</Text>
+      <TouchableOpacity style={styles.selectBox}>
+        <Text>{activity} ▼</Text>
+      </TouchableOpacity>
+
+      <TextInput
+        placeholder="Nhập mô tả"
+        style={styles.modalInput}
+        value={desc}
+        onChangeText={setDesc}
+      />
+      <TextInput
+        placeholder="Nhập tg bắt đầu"
+        style={styles.modalInput}
+        value={startTime}
+        onChangeText={setStartTime}
+      />
+      <TextInput
+        placeholder="Nhập tg thực hiện"
+        style={styles.modalInput}
+        value={duration}
+        onChangeText={setDuration}
+      />
+
+      <Text style={styles.label}>Lặp lại:</Text>
+      <TouchableOpacity style={styles.selectBox}>
+        <Text>{repeat} ▼</Text>
+      </TouchableOpacity>
+
+      <View style={styles.modalButtons}>
+        <TouchableOpacity style={styles.cancelBtn} onPress={() => setEditModalVisible(false)}>
+          <Text style={styles.btnText}>Hủy</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.addBtn}
+          onPress={() => {
+            // TODO: xử lý cập nhật hoạt động tại đây
+            setEditModalVisible(false);
+          }}
+        >
+          <Text style={styles.btnText}>Sửa</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
+
     </View>
   );
 };
