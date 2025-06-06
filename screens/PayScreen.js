@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
+import { useNavigation } from '@react-navigation/native';
 const cards = [
   { id: '1', number: '**** 94545457', bank: 'BIDV Bank' },
   { id: '2', number: '**** 94545656', bank: 'MB Bank' },
 ];
 
 const PaymentScreen = () => {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -31,7 +32,7 @@ const PaymentScreen = () => {
             <Text style={styles.cardText}>
               {item.number} <Text style={styles.bankText}>{item.bank}</Text>
             </Text>
-            <Ionicons name="chevron-forward" size={20} color="black" />
+            <Ionicons name="chevron-forward" size={20} color="black" onPress={() => navigation.navigate('AddPay')}/>
           </TouchableOpacity>
         )}
         contentContainerStyle={{ gap: 12 }}
