@@ -5,6 +5,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Modal,
+  TextInput,
   FlatList,
   Image,
 } from 'react-native';
@@ -21,7 +23,11 @@ const posts = [
 const PostScreen = () => {
   const navigation = useNavigation();
   const [selectedFilter, setSelectedFilter] = useState('Chờ duyệt');
-
+const [modalVisible, setModalVisible] = useState(false);
+const [category, setCategory] = useState('Cộng đồng');
+const [content, setContent] = useState('');
+const [status, setStatus] = useState('Chưa duyệt');
+const [createdTime, setCreatedTime] = useState('7:00 AM 22/05/2025');
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Post</Text>
@@ -61,9 +67,74 @@ const PostScreen = () => {
         ))}
       </ScrollView>
 
-      <TouchableOpacity style={styles.addButton}>
+      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
         <Ionicons name="add" size={32} color="#fff" />
       </TouchableOpacity>
+
+      <Modal
+  animationType="slide"
+  transparent={true}
+  visible={modalVisible}
+  onRequestClose={() => setModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContainer}>
+      <Text style={styles.modalTitle}>Thêm bài viết</Text>
+
+      {/* Loại bài */}
+      <Text style={styles.modalLabel}>Loại:</Text>
+      <TouchableOpacity style={styles.dropdown}>
+        <Text>{category}</Text>
+        {/* Có thể thêm dropdown sau nếu muốn */}
+      </TouchableOpacity>
+
+      {/* Nội dung */}
+      <TextInput
+        style={styles.input}
+        placeholder="Nội dung"
+        value={content}
+        onChangeText={setContent}
+        multiline
+      />
+
+      {/* Trạng thái */}
+      <Text style={styles.modalLabel}>Trạng thái</Text>
+      <TextInput
+        style={styles.input}
+        value={status}
+        editable={false}
+      />
+
+      {/* Thời gian tạo */}
+      <Text style={styles.modalLabel}>Thời gian tạo</Text>
+      <TextInput
+        style={styles.input}
+        value={createdTime}
+        editable={false}
+      />
+
+      {/* Nút */}
+      <View style={styles.modalButtonContainer}>
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => setModalVisible(false)}
+        >
+          <Text style={styles.buttonText}>Hủy</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.addButtonModal}
+          onPress={() => {
+            // Gọi API thêm bài viết nếu cần
+            setModalVisible(false);
+          }}
+        >
+          <Text style={styles.buttonText}>Thêm</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
+
     </View>
   );
 };
@@ -137,4 +208,69 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     elevation: 5,
   },
+  modalOverlay: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: 'rgba(0,0,0,0.4)',
+},
+modalContainer: {
+  width: '90%',
+  backgroundColor: '#ffe5e5',
+  borderRadius: 24,
+  padding: 20,
+},
+modalTitle: {
+  fontSize: 20,
+  fontWeight: 'bold',
+  textAlign: 'center',
+  marginBottom: 16,
+},
+modalLabel: {
+  fontSize: 16,
+  fontWeight: '500',
+  marginTop: 8,
+  marginBottom: 4,
+},
+input: {
+  backgroundColor: '#f2f2f2',
+  padding: 12,
+  borderRadius: 12,
+  fontSize: 16,
+  marginBottom: 8,
+},
+dropdown: {
+  backgroundColor: '#f2f2f2',
+  padding: 12,
+  borderRadius: 12,
+  justifyContent: 'center',
+  marginBottom: 8,
+},
+modalButtonContainer: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  marginTop: 16,
+},
+cancelButton: {
+  backgroundColor: '#ff7a7a',
+  paddingVertical: 12,
+  paddingHorizontal: 24,
+  borderRadius: 24,
+  borderWidth: 1,
+  borderColor: '#000',
+},
+addButtonModal: {
+  backgroundColor: '#66ff66',
+  paddingVertical: 12,
+  paddingHorizontal: 24,
+  borderRadius: 24,
+  borderWidth: 1,
+  borderColor: '#000',
+},
+buttonText: {
+  fontWeight: 'bold',
+  fontSize: 16,
+  color: '#000',
+},
+
 });
