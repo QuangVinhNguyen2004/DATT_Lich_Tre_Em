@@ -11,6 +11,7 @@ import PasswordResetNoticeScreen from './screens/NotiReset';
 import DiaryScreen from './screens/DiarySrceen';
 import UpdateAccScreen from './screens/UpdateAccScreen';
 import PaymentScreen from './screens/PayScreen';
+import PostDetailScreen from './screens/PostdetailScreen';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -71,6 +72,8 @@ export default function App() {
         <Stack.Screen options={{ headerShown: false }} name="Setting" component={SettingsScreen} />
         <Stack.Screen options={{ headerShown: false }} name="UpdateAcc" component={UpdateAccScreen} />
         <Stack.Screen options={{ headerShown: false }} name="Pay" component={PaymentScreen} /> 
+        <Stack.Screen options={{ headerShown: false }} name="Postdetail" component={PostDetailScreen} /> 
+
         </Stack.Navigator>
       </NavigationContainer>
     </>

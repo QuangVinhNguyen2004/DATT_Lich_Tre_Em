@@ -9,7 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
+import { useNavigation } from '@react-navigation/native';
 const filters = ['Chờ duyệt', 'Đã duyệt', 'Gia đình', 'Cộng đồng'];
 
 const posts = [
@@ -19,6 +19,7 @@ const posts = [
 ];
 
 const PostScreen = () => {
+  const navigation = useNavigation();
   const [selectedFilter, setSelectedFilter] = useState('Chờ duyệt');
 
   return (
@@ -51,11 +52,11 @@ const PostScreen = () => {
         {posts.map((post) => (
           <View key={post.id} style={styles.postItem}>
             <Ionicons name="document-text-outline" size={24} color="black" style={{ marginRight: 10 }} />
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1 }} >
               <Text style={styles.postCategory}>{post.category}</Text>
               <Text style={styles.postTime}>{post.time}</Text>
             </View>
-            <Ionicons name="chevron-forward-outline" size={20} color="black" />
+            <Ionicons name="chevron-forward-outline" size={20} color="black" onPress={() => navigation.navigate('Postdetail')}/>
           </View>
         ))}
       </ScrollView>
