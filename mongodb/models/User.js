@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Mật khẩu là bắt buộc'],
     minlength: [6, 'Mật khẩu phải có ít nhất 6 ký tự'],
   },
+  children: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Child' }],
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
