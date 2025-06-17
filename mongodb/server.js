@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const childRouter = require('../mongodb/routes/childRouter'); 
+
 require('dotenv').config();
 
 const app = express();
@@ -12,6 +14,6 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error(err));
 
 app.use('/api/auth', require('./routes/auth'));
-
+app.use("/api/child", childRouter);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server chạy trên cổng ${PORT}`));
