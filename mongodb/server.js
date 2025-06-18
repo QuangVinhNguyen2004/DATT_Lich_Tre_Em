@@ -4,6 +4,7 @@ const cors = require('cors');
 const childRouter = require('../mongodb/routes/childRouter'); 
 const scheduleRouter = require('../mongodb/routes/scheduleRouter'); 
 const subRouter = require('../mongodb/routes/subRouter'); 
+const postRouter = require('../mongodb/routes/postRouter'); 
 require('dotenv').config();
 
 const app = express();
@@ -18,5 +19,6 @@ app.use('/api/auth', require('./routes/auth'));
 app.use("/api/child", childRouter);
 app.use("/api/schedule", scheduleRouter);
 app.use("/api/sub", subRouter);
+app.use("/api/post", postRouter);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server chạy trên cổng ${PORT}`));
