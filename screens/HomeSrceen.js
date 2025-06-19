@@ -6,13 +6,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getChildrenByUser } from '../api/child';
-import { getSchedulesByChild, addSchedule, updateSchedule, deleteSchedule } from '../api/activity';
+
+import { getSchedulesByChild, addSchedule, updateSchedule, deleteSchedule } from '../services/ScheduleApi';
+
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-  const [children, setChildren] = useState([]);
-  const [selectedChild, setSelectedChild] = useState(null);
+  // const [children, setChildren] = useState([]);
+  // const [selectedChild, setSelectedChild] = useState(null);
   const [schedules, setSchedules] = useState([]);
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -26,13 +27,13 @@ const HomeScreen = () => {
   const [repeat, setRepeat] = useState('Không');
   const [editingScheduleId, setEditingScheduleId] = useState(null);
 
-  const fetchChildren = async (userId, token) => {
-    const data = await getChildrenByUser(userId, token);
-    setChildren(data);
-    if (data.length > 0 && !selectedChild) {
-      setSelectedChild(data[0]);
-    }
-  };
+  // const fetchChildren = async (userId, token) => {
+  //   const data = await getChildrenByUser(userId, token);
+  //   setChildren(data);
+  //   if (data.length > 0 && !selectedChild) {
+  //     setSelectedChild(data[0]);
+  //   }
+  // };
 
   const fetchSchedules = async (childId, token) => {
     const data = await getSchedulesByChild(childId, token);
@@ -50,13 +51,13 @@ const HomeScreen = () => {
     init();
   }, []);
 
-  useEffect(() => {
-    if (selectedChild) {
-      AsyncStorage.getItem('token').then(token => {
-        fetchSchedules(selectedChild._id, token);
-      });
-    }
-  }, [selectedChild]);
+  // useEffect(() => {
+  //   if (selectedChild) {
+  //     AsyncStorage.getItem('token').then(token => {
+  //       fetchSchedules(selectedChild._id, token);
+  //     });
+  //   }
+  // }, [selectedChild]);
 
   const resetForm = () => {
     setActivity('');
@@ -104,7 +105,7 @@ const HomeScreen = () => {
             setSelectedChild(children[next]);
           }}
         >
-          <Text style={styles.childText}>{selectedChild?.name || 'Chọn trẻ ▼'}</Text>
+          <Text style={styles.childText}>Chọn trẻ ▼</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.bagButton} onPress={() => navigation.navigate('Diary')}>
           <Ionicons name="document-outline" size={24} color="white" />

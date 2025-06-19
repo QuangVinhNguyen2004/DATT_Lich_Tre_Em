@@ -1,5 +1,5 @@
 import axios from 'axios';
-const API = 'http://192.168.52.100:3000/api/child';
+const API = 'http://192.168.52.106:3000/api/child';
 
 export const getChildrenByUser = async (userId) => {
   const res = await axios.get(`${API}/user/${userId}`);
