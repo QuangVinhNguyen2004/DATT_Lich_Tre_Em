@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,15 +6,35 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
+import { getAllDiaries } from '../services/DiaryApi'; 
+import moment from 'moment';
 
 const DiaryScreen = () => {
+  const [diaries, setDiaries] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDiaries();
+  }, []);
+
+  const fetchDiaries = async () => {
+    try {
+      const data = await getAllDiaries();
+      setDiaries(data);
+    } catch (error) {
+      console.error('Lỗi khi lấy nhật ký:', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* Tiêu đề */}
       <Text style={styles.title}>Nhật ký</Text>
 
-      {/* Bộ lọc */}
+      {/* Bộ lọc (tạm thời chưa hoạt động) */}
       <View style={styles.filterContainer}>
         <TouchableOpacity style={[styles.filterBtn, styles.activeBtn]}>
           <Text style={styles.activeBtnText}>Mới nhất</Text>
@@ -28,32 +48,38 @@ const DiaryScreen = () => {
       </View>
 
       {/* Danh sách nhật ký */}
-      <ScrollView style={{ marginTop: 16 }}>
-        {[1, 2].map((item, index) => (
-          <View key={index} style={styles.diaryCard}>
-            <View style={styles.row}>
-              <Image
-                source={require('../assets/img/cuoihaha.png')} 
-                style={styles.avatar}
-              />
-              <View style={styles.content}>
-                <Text style={styles.noteTitle}>Ghi chú: Cho bé ngủ</Text>
-                <Text style={styles.noteDate}>TG: 22/05/2025</Text>
-                <Text style={styles.noteContent}>
-                  ND: Cho bé ngủ được 3 tiếng, quấy khóc nhẹ, Bé ngủ ngoan không bị tỉnh...
-                </Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="#007BFF" style={{ marginTop: 40 }} />
+      ) : (
+        <ScrollView style={{ marginTop: 16 }}>
+          {diaries.map((item, index) => (
+            <View key={index} style={styles.diaryCard}>
+              <View style={styles.row}>
+                <Image
+                  source={require('../assets/img/cuoihaha.png')}
+                  style={styles.avatar}
+                />
+                <View style={styles.content}>
+                  <Text style={styles.noteTitle}>
+                    Bé: {item.child?.ten || 'Không rõ'}
+                  </Text>
+                  <Text style={styles.noteDate}>
+                    TG: {moment(item.thoi_gian_tao).format('DD/MM/YYYY HH:mm')}
+                  </Text>
+                  <Text style={styles.noteContent}>ND: {item.noi_dung}</Text>
+                  <Text style={styles.noteUser}>
+                    Người ghi: {item.user?.ten || 'Không rõ'}
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
-        ))}
-      </ScrollView>
+          ))}
+        </ScrollView>
+      )}
 
       {/* Nút thêm */}
       <TouchableOpacity style={styles.addButton}>
-        <Image
-          source={require('../assets/img/them1.png')} 
-          style={styles.addIcon}
-        />
+        <Image source={require('../assets/img/them1.png')} style={styles.addIcon} />
       </TouchableOpacity>
     </View>
   );
@@ -71,13 +97,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: '600',
-    marginTop:50,
-    marginBottom:50,
-   alignSelf:'center'
+    marginTop: 50,
+    marginBottom: 50,
+    alignSelf: 'center',
   },
   filterContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
     gap: 8,
   },
   filterBtn: {
@@ -125,6 +150,11 @@ const styles = StyleSheet.create({
   },
   noteContent: {
     color: '#333',
+  },
+  noteUser: {
+    marginTop: 4,
+    color: 'gray',
+    fontSize: 12,
   },
   addButton: {
     position: 'absolute',
