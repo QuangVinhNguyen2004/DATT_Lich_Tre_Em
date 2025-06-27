@@ -1,47 +1,63 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity
+} from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 const PostDetailScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { post } = route.params;
+
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Post</Text>
+      <Text style={styles.title}>Chi tiết bài viết</Text>
 
-      {/* Mã bài */}
       <View style={styles.box}>
         <Text style={styles.label}>Mã bài :</Text>
-        <Text style={styles.content}>ed42jwdkfjsdsggsdg</Text>
+        <Text style={styles.content}>{post._id}</Text>
       </View>
 
-      {/* Loại bài */}
       <View style={styles.box}>
         <Text style={styles.label}>Loại bài:</Text>
-        <Text style={styles.content}>Cộng đồng</Text>
+        <Text style={styles.content}>{post.loai}</Text>
       </View>
 
-      {/* Nội dung */}
       <View style={styles.box}>
-        <Text style={styles.label}>Nội dung</Text>
-        <Text style={styles.content}>aaaaa.....</Text>
+        <Text style={styles.label}>Nội dung:</Text>
+        <Text style={styles.content}>{post.noi_dung}</Text>
       </View>
 
-      {/* Trạng thái */}
       <View style={styles.box}>
-        <Text style={styles.label}>Trạng thái</Text>
-        <Text style={styles.content}>Chưa duyệt</Text>
+        <Text style={styles.label}>Trạng thái:</Text>
+        <Text style={styles.content}>{post.trang_thai}</Text>
       </View>
 
-      {/* Thời gian tạo */}
       <View style={styles.box}>
-        <Text style={styles.label}>Thời gian tạo</Text>
-        <Text style={styles.content}>7:00 AM 22/05/2025</Text>
+        <Text style={styles.label}>Thời gian tạo:</Text>
+        <Text style={styles.content}>
+          {new Date(post.createdAt).toLocaleString('vi-VN')}
+        </Text>
       </View>
 
-      {/* Nút hành động */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.backButton}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
           <Text style={styles.buttonText}>Trở lại</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton}>
+
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => {
+            // TODO: thêm chức năng xóa nếu cần
+          }}
+        >
           <Text style={styles.buttonText}>Xóa</Text>
         </TouchableOpacity>
       </View>
@@ -50,6 +66,7 @@ const PostDetailScreen = () => {
 };
 
 export default PostDetailScreen;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -61,7 +78,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     alignSelf: 'center',
     marginBottom: 24,
-    marginTop:10,
+    marginTop: 10,
   },
   box: {
     backgroundColor: '#f2f2f2',
