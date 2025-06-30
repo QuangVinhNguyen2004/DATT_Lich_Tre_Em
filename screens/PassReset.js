@@ -8,14 +8,23 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
+import axios from 'axios';
 const PassResetScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
 
-  const handleResetPassword = () => {
-    // Gọi API hoặc xử lý logic reset mật khẩu ở đây
-    console.log('Reset email:', email);
-  };
+const handleResetPassword = async () => {
+  try {
+    const response = await axios.post('http://192.168.52.106:3000/api/auth/forgot-password', {
+      email,
+    });
+
+    Alert.alert('Thành công', 'Kiểm tra email của bạn để đặt lại mật khẩu');
+    navigation.navigate('NotiReset');
+  } catch (error) {
+    console.error('Lỗi reset mật khẩu:', error.response?.data || error.message);
+    Alert.alert('Lỗi', error.response?.data?.message || 'Không thể gửi yêu cầu');
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -39,7 +48,7 @@ const PassResetScreen = ({ navigation }) => {
       />
 
       {/* Nút tiếp tục */}
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('NotiReset')}>
+      <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
         <Text style={styles.buttonText}>Tiếp tục</Text>
       </TouchableOpacity>
     </SafeAreaView>
