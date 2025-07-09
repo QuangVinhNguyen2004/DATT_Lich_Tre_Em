@@ -1,25 +1,31 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TextInput, Image, ScrollView,
-  TouchableOpacity, Modal
+  TouchableOpacity, Modal, FlatList, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { getChildrenByUser } from '../services/childApi';
 import { getSchedulesByChild, addSchedule, updateSchedule, deleteSchedule } from '../services/ScheduleApi';
-
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-  // const [children, setChildren] = useState([]);
-  // const [selectedChild, setSelectedChild] = useState(null);
+
+  // Dữ liệu trẻ
+  const [children, setChildren] = useState([]);
+  const [selectedChild, setSelectedChild] = useState(null);
+
+  // Lịch trình
   const [schedules, setSchedules] = useState([]);
 
+  // Modal & form
   const [modalVisible, setModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
 
+  // Form inputs
   const [activity, setActivity] = useState('');
   const [desc, setDesc] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -27,38 +33,70 @@ const HomeScreen = () => {
   const [repeat, setRepeat] = useState('Không');
   const [editingScheduleId, setEditingScheduleId] = useState(null);
 
-  // const fetchChildren = async (userId, token) => {
-  //   const data = await getChildrenByUser(userId, token);
-  //   setChildren(data);
-  //   if (data.length > 0 && !selectedChild) {
-  //     setSelectedChild(data[0]);
-  //   }
-  // };
+  // Loading
+  const [loadingChildren, setLoadingChildren] = useState(false);
+  const [loadingSchedules, setLoadingSchedules] = useState(false);
 
-  const fetchSchedules = async (childId, token) => {
-    const data = await getSchedulesByChild(childId, token);
-    setSchedules(data);
+  // Load danh sách trẻ và mặc định chọn trẻ đầu tiên
+  const loadChildren = async () => {
+    try {
+      setLoadingChildren(true);
+      const userData = await AsyncStorage.getItem('user');
+      const user = JSON.parse(userData);
+      if (!user?._id) {
+        setChildren([]);
+        setSelectedChild(null);
+        return;
+      }
+      const data = await getChildrenByUser(user._id);
+      setChildren(data);
+      if (data.length > 0) {
+        setSelectedChild(data[0]);
+      } else {
+        setSelectedChild(null);
+        setSchedules([]);
+      }
+    } catch (error) {
+      console.error('Lỗi load children:', error);
+    } finally {
+      setLoadingChildren(false);
+    }
   };
 
+  // Load lịch trình theo child
+  const loadSchedules = async (childId) => {
+    if (!childId) {
+      setSchedules([]);
+      return;
+    }
+    try {
+      setLoadingSchedules(true);
+      const data = await getSchedulesByChild(childId);
+      setSchedules(data);
+    } catch (error) {
+      console.error('Lỗi load schedules:', error);
+    } finally {
+      setLoadingSchedules(false);
+    }
+  };
+
+  // Khi màn hình focus lại thì reload dữ liệu
+  useFocusEffect(
+    useCallback(() => {
+      loadChildren();
+    }, [])
+  );
+
+  // Khi chọn trẻ khác
   useEffect(() => {
-    const init = async () => {
-      const user = JSON.parse(await AsyncStorage.getItem('user'));
-      const token = await AsyncStorage.getItem('token');
-      if (user && token) {
-        await fetchChildren(user._id, token);
-      }
-    };
-    init();
-  }, []);
+    if (selectedChild?._id) {
+      loadSchedules(selectedChild._id);
+    } else {
+      setSchedules([]);
+    }
+  }, [selectedChild]);
 
-  // useEffect(() => {
-  //   if (selectedChild) {
-  //     AsyncStorage.getItem('token').then(token => {
-  //       fetchSchedules(selectedChild._id, token);
-  //     });
-  //   }
-  // }, [selectedChild]);
-
+  // Reset form modal
   const resetForm = () => {
     setActivity('');
     setDesc('');
@@ -68,154 +106,280 @@ const HomeScreen = () => {
     setEditingScheduleId(null);
   };
 
+  // Thêm lịch
   const handleAdd = async () => {
-    const token = await AsyncStorage.getItem('token');
-    await addSchedule(selectedChild._id, { activity, description: desc, startTime, duration, repeat }, token);
-    await fetchSchedules(selectedChild._id, token);
-    setModalVisible(false);
-    resetForm();
+    if (!activity || !startTime) {
+      alert('Vui lòng nhập hoạt động và thời gian bắt đầu');
+      return;
+    }
+    try {
+      await addSchedule(selectedChild._id, {
+        activity,
+        description: desc,
+        startTime: new Date(startTime).toISOString(),
+        duration: Number(duration) || 0,
+        repeat,
+      });
+      await loadSchedules(selectedChild._id);
+      setModalVisible(false);
+      resetForm();
+    } catch (error) {
+      console.error('Lỗi thêm lịch:', error);
+      alert('Không thể thêm lịch. Vui lòng thử lại.');
+    }
   };
 
+  // Sửa lịch
   const handleEdit = async () => {
-    const token = await AsyncStorage.getItem('token');
-    await updateSchedule(editingScheduleId, { activity, description: desc, startTime, duration, repeat }, token);
-    await fetchSchedules(selectedChild._id, token);
-    setEditModalVisible(false);
-    resetForm();
+    if (!activity || !startTime) {
+      alert('Vui lòng nhập hoạt động và thời gian bắt đầu');
+      return;
+    }
+    try {
+      await updateSchedule(editingScheduleId, {
+        activity,
+        description: desc,
+        startTime: new Date(startTime).toISOString(),
+        duration: Number(duration) || 0,
+        repeat,
+      });
+      await loadSchedules(selectedChild._id);
+      setEditModalVisible(false);
+      resetForm();
+    } catch (error) {
+      console.error('Lỗi sửa lịch:', error);
+      alert('Không thể cập nhật lịch. Vui lòng thử lại.');
+    }
   };
 
+  // Xóa lịch
   const handleDelete = async () => {
-    const token = await AsyncStorage.getItem('token');
-    await deleteSchedule(editingScheduleId, token);
-    await fetchSchedules(selectedChild._id, token);
-    setConfirmDeleteVisible(false);
-    resetForm();
+    try {
+      await deleteSchedule(editingScheduleId);
+      await loadSchedules(selectedChild._id);
+      setConfirmDeleteVisible(false);
+      resetForm();
+    } catch (error) {
+      console.error('Lỗi xóa lịch:', error);
+      alert('Không thể xóa lịch. Vui lòng thử lại.');
+    }
   };
+
+  // Khi nhấn chọn trẻ từ dropdown
+  const handleSelectChild = (child) => {
+    setSelectedChild(child);
+  };
+
+  // Render item picker trẻ (ảnh + tên)
+  const renderChildItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.childItem}
+      onPress={() => {
+        handleSelectChild(item);
+      }}
+    >
+      <Image
+        source={item.img ? { uri: item.img } : require('../assets/img/logotreem.png')}
+        style={styles.childImg}
+      />
+      <Text style={styles.childName}>{item.name}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* Header với spinner chọn trẻ */}
       <View style={styles.header}>
         <Image source={require('../assets/img/logotreem.png')} style={styles.logo} />
-        <TouchableOpacity
-          style={styles.childButton}
-          onPress={() => {
-            const curr = children.findIndex(c => c._id === selectedChild._id);
-            const next = (curr + 1) % children.length;
-            setSelectedChild(children[next]);
-          }}
-        >
-          <Text style={styles.childText}>Chọn trẻ ▼</Text>
-        </TouchableOpacity>
+        <View style={styles.childSelector}>
+          {loadingChildren ? (
+            <ActivityIndicator size="small" color="#0D6EFD" />
+          ) : children.length === 0 ? (
+            <Text>Chưa có hồ sơ trẻ</Text>
+          ) : (
+            <FlatList
+              horizontal
+              data={children}
+              keyExtractor={(item) => item._id}
+              renderItem={renderChildItem}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ alignItems: 'center' }}
+              extraData={selectedChild?._id}
+            />
+          )}
+        </View>
         <TouchableOpacity style={styles.bagButton} onPress={() => navigation.navigate('Diary')}>
           <Ionicons name="document-outline" size={24} color="white" />
         </TouchableOpacity>
       </View>
 
-      {/* Search */}
-      <View style={styles.searchBox}>
-        <Ionicons name="search" size={20} color="#999" style={{ marginRight: 8 }} />
-        <TextInput placeholder="Tìm kiếm" style={{ flex: 1 }} />
-      </View>
+      {/* Danh sách lịch trình */}
+      <Text style={styles.sectionTitle}>Lịch trình của {selectedChild?.name || '...'}</Text>
 
-      {/* Recent */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Hoạt động gần đây</Text>
-        <Text style={styles.viewAll}>Xem tất cả</Text>
-      </View>
+      {loadingSchedules ? (
+        <ActivityIndicator size="large" color="#0D6EFD" />
+      ) : schedules.length === 0 ? (
+        <Text style={{ textAlign: 'center', marginTop: 20 }}>Chưa có lịch trình</Text>
+      ) : (
+        <ScrollView style={{ flex: 1 }}>
+          {schedules.map((item) => (
+            <View key={item._id} style={styles.scheduleCard}>
+              <Text style={styles.activityText}>{item.activity}</Text>
+              <Text>Mô tả: {item.description || 'Không có'}</Text>
+              <Text>Bắt đầu: {new Date(item.startTime).toLocaleString()}</Text>
+              <Text>Thời lượng: {item.duration} phút</Text>
+              <Text>Lặp lại: {item.repeat}</Text>
 
-      <ScrollView>
-        {schedules.map(item => (
-          <View key={item._id} style={styles.recentCard}>
-            <Image source={require('../assets/img/trean1.png')} style={styles.recentImage} />
-            <View style={styles.recentContent}>
-              <Text>Hoạt động: <Text style={styles.bold}>{item.activity}</Text></Text>
-              <Text>Mô tả: {item.description}</Text>
-              <Text>Bắt đầu: {item.startTime}</Text>
-              <Text>Thực hiện: {item.duration}</Text>
-              <Text>Lặp lại: {item.repeat ? 'Có' : 'Không'}</Text>
-              <View style={styles.recentButtons}>
+              <View style={styles.buttonRow}>
                 <TouchableOpacity
                   style={styles.deleteBtn}
-                  onPress={() => { setEditingScheduleId(item._id); setConfirmDeleteVisible(true); }}
+                  onPress={() => {
+                    setEditingScheduleId(item._id);
+                    setConfirmDeleteVisible(true);
+                  }}
                 >
                   <Text style={styles.btnText}>Xóa</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.updateBtn}
+                  style={styles.editBtn}
                   onPress={() => {
                     setEditingScheduleId(item._id);
                     setActivity(item.activity);
                     setDesc(item.description);
-                    setStartTime(item.startTime);
-                    setDuration(item.duration);
-                    setRepeat(item.repeat ? 'Có' : 'Không');
+                    setStartTime(new Date(item.startTime).toISOString().slice(0,16)); // yyyy-MM-ddTHH:mm
+                    setDuration(item.duration?.toString() || '');
+                    setRepeat(item.repeat || 'Không');
                     setEditModalVisible(true);
                   }}
                 >
-                  <Text style={styles.btnText}>Cập nhật</Text>
+                  <Text style={styles.btnText}>Sửa</Text>
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
-        ))}
-      </ScrollView>
+          ))}
+        </ScrollView>
+      )}
 
-      {/* Add Button */}
-      <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
+      {/* Nút thêm lịch */}
+      <TouchableOpacity style={styles.fab} onPress={() => {
+        resetForm();
+        setModalVisible(true);
+      }}>
         <Ionicons name="add" size={32} color="white" />
       </TouchableOpacity>
 
-      {/* Add Modal */}
+      {/* Modal thêm */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Thêm hoạt động</Text>
-            {/* Inputs */}
-            <TextInput placeholder="Hoạt động" style={styles.modalInput} value={activity} onChangeText={setActivity} />
-            <TextInput placeholder="Mô tả" style={styles.modalInput} value={desc} onChangeText={setDesc} />
-            <TextInput placeholder="Thời gian bắt đầu" style={styles.modalInput} value={startTime} onChangeText={setStartTime} />
-            <TextInput placeholder="Thời gian (phút)" style={styles.modalInput} value={duration} onChangeText={setDuration} />
-            <TouchableOpacity style={styles.selectBox} onPress={() => setRepeat(prev => prev === 'Có' ? 'Không' : 'Có')}>
+            <Text style={styles.modalTitle}>Thêm lịch trình</Text>
+
+            <TextInput
+              placeholder="Hoạt động"
+              style={styles.modalInput}
+              value={activity}
+              onChangeText={setActivity}
+            />
+            <TextInput
+              placeholder="Mô tả"
+              style={styles.modalInput}
+              value={desc}
+              onChangeText={setDesc}
+            />
+            <TextInput
+              placeholder="Thời gian bắt đầu (yyyy-MM-ddThh:mm)"
+              style={styles.modalInput}
+              value={startTime}
+              onChangeText={setStartTime}
+            />
+            <TextInput
+              placeholder="Thời lượng (phút)"
+              style={styles.modalInput}
+              keyboardType="numeric"
+              value={duration}
+              onChangeText={setDuration}
+            />
+            <TouchableOpacity
+              style={styles.selectBox}
+              onPress={() => setRepeat(prev => (prev === 'Có' ? 'Không' : 'Có'))}
+            >
               <Text>Lặp lại: {repeat}</Text>
             </TouchableOpacity>
+
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}><Text style={styles.btnText}>Hủy</Text></TouchableOpacity>
-              <TouchableOpacity style={styles.addBtn} onPress={handleAdd}><Text style={styles.btnText}>Thêm</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
+                <Text style={styles.btnText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.addBtn} onPress={handleAdd}>
+                <Text style={styles.btnText}>Thêm</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* Edit Modal */}
+      {/* Modal sửa */}
       <Modal visible={editModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Cập nhật hoạt động</Text>
-            {/* Inputs */}
-            <TextInput placeholder="Hoạt động" style={styles.modalInput} value={activity} onChangeText={setActivity} />
-            <TextInput placeholder="Mô tả" style={styles.modalInput} value={desc} onChangeText={setDesc} />
-            <TextInput placeholder="Thời gian bắt đầu" style={styles.modalInput} value={startTime} onChangeText={setStartTime} />
-            <TextInput placeholder="Thời gian (phút)" style={styles.modalInput} value={duration} onChangeText={setDuration} />
-            <TouchableOpacity style={styles.selectBox} onPress={() => setRepeat(prev => prev === 'Có' ? 'Không' : 'Có')}>
+            <Text style={styles.modalTitle}>Cập nhật lịch trình</Text>
+
+            <TextInput
+              placeholder="Hoạt động"
+              style={styles.modalInput}
+              value={activity}
+              onChangeText={setActivity}
+            />
+            <TextInput
+              placeholder="Mô tả"
+              style={styles.modalInput}
+              value={desc}
+              onChangeText={setDesc}
+            />
+            <TextInput
+              placeholder="Thời gian bắt đầu (yyyy-MM-ddThh:mm)"
+              style={styles.modalInput}
+              value={startTime}
+              onChangeText={setStartTime}
+            />
+            <TextInput
+              placeholder="Thời lượng (phút)"
+              style={styles.modalInput}
+              keyboardType="numeric"
+              value={duration}
+              onChangeText={setDuration}
+            />
+            <TouchableOpacity
+              style={styles.selectBox}
+              onPress={() => setRepeat(prev => (prev === 'Có' ? 'Không' : 'Có'))}
+            >
               <Text>Lặp lại: {repeat}</Text>
             </TouchableOpacity>
+
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setEditModalVisible(false)}><Text style={styles.btnText}>Hủy</Text></TouchableOpacity>
-              <TouchableOpacity style={styles.addBtn} onPress={handleEdit}><Text style={styles.btnText}>Sửa</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setEditModalVisible(false)}>
+                <Text style={styles.btnText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.addBtn} onPress={handleEdit}>
+                <Text style={styles.btnText}>Sửa</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* Delete Modal */}
+      {/* Modal xác nhận xóa */}
       <Modal visible={confirmDeleteVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.confirmBox}>
-            <Text style={styles.modalTitle}>Xác nhận xóa?</Text>
+            <Text style={styles.modalTitle}>Xác nhận xóa lịch trình?</Text>
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setConfirmDeleteVisible(false)}><Text style={styles.btnText}>Hủy</Text></TouchableOpacity>
-              <TouchableOpacity style={styles.addBtn} onPress={handleDelete}><Text style={styles.btnText}>Xóa</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setConfirmDeleteVisible(false)}>
+                <Text style={styles.btnText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.addBtn} onPress={handleDelete}>
+                <Text style={styles.btnText}>Xóa</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -225,6 +389,7 @@ const HomeScreen = () => {
 };
 
 export default HomeScreen;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -235,7 +400,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 12,
     justifyContent: 'space-between',
   },
   logo: {
@@ -243,15 +408,26 @@ const styles = StyleSheet.create({
     height: 40,
     resizeMode: 'contain',
   },
-  childButton: {
+  childSelector: {
     flex: 1,
     marginHorizontal: 12,
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: '#D1E7DD',
-    alignItems: 'center',
   },
-  childText: {
+  childItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D1E7DD',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+  },
+  childImg: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 8,
+  },
+  childName: {
     fontWeight: 'bold',
     color: '#0F5132',
   },
@@ -260,68 +436,41 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 50,
   },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
     marginBottom: 8,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  viewAll: {
-    color: '#0D6EFD',
-    fontSize: 14,
-  },
-  recentCard: {
-    flexDirection: 'row',
+  scheduleCard: {
     backgroundColor: '#FFF',
+    padding: 12,
     marginBottom: 12,
     borderRadius: 12,
-    overflow: 'hidden',
     elevation: 2,
   },
-  recentImage: {
-    width: 80,
-    height: 80,
-  },
-  recentContent: {
-    flex: 1,
-    padding: 8,
-    justifyContent: 'space-between',
-  },
-  bold: {
+  activityText: {
     fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 6,
   },
-  recentButtons: {
+  buttonRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginTop: 8,
   },
   deleteBtn: {
     backgroundColor: '#DC3545',
-    padding: 6,
+    padding: 8,
     borderRadius: 6,
-    marginRight: 8,
+    marginRight: 10,
   },
-  updateBtn: {
+  editBtn: {
     backgroundColor: '#FFC107',
-    padding: 6,
+    padding: 8,
     borderRadius: 6,
   },
   btnText: {
-    color: '#fff',
+    color: 'white',
     fontWeight: 'bold',
   },
   fab: {

@@ -12,19 +12,19 @@ import axios from 'axios';
 const PassResetScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
 
-const handleResetPassword = async () => {
-  try {
-    const response = await axios.post('http://192.168.52.106:3000/api/auth/forgot-password', {
-      email,
-    });
+// const handleResetPassword = async () => {
+//   try {
+//     const response = await axios.post('http://192.168.52.106:3000/api/auth/forgot-password', {
+//       email,
+//     });
 
-    Alert.alert('Thành công', 'Kiểm tra email của bạn để đặt lại mật khẩu');
-    navigation.navigate('NotiReset');
-  } catch (error) {
-    console.error('Lỗi reset mật khẩu:', error.response?.data || error.message);
-    Alert.alert('Lỗi', error.response?.data?.message || 'Không thể gửi yêu cầu');
-  }
-};
+//     Alert.alert('Thành công', 'Kiểm tra email của bạn để đặt lại mật khẩu');
+//     navigation.navigate('NotiReset');
+//   } catch (error) {
+//     console.error('Lỗi reset mật khẩu:', error.response?.data || error.message);
+//     Alert.alert('Lỗi', error.response?.data?.message || 'Không thể gửi yêu cầu');
+//   }
+// };
 
   return (
     <SafeAreaView style={styles.container}>

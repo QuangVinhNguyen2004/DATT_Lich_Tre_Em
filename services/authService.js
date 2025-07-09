@@ -1,9 +1,19 @@
-import axios from 'axios';
+import api from './api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API = 'http://192.168.52.106:3000/api/auth'; 
+// Đăng nhập
+export const loginUser = async ({ email, password }) => {
+  const res = await api.post('/user/login', { email, password });
 
+  // ✅ Lưu toàn bộ user (bao gồm token) nếu đăng nhập thành công
+  await AsyncStorage.setItem('user', JSON.stringify(res.data));
+
+  return res.data;
+};
+
+// Đăng ký
 export const registerUser = async ({ name, phone, email, password }) => {
-  const res = await axios.post(`${API}/register`, {
+  const res = await api.post('/user/register', {
     name,
     phone,
     email,
@@ -11,10 +21,8 @@ export const registerUser = async ({ name, phone, email, password }) => {
   });
   return res.data;
 };
-export const loginUser = async ({ email, password }) => {
-  const res = await axios.post(`${API}/login`, {
-    email,
-    password,
-  });
-  return res.data;
+
+// Đăng xuất (xóa token)
+export const logoutUser = async () => {
+  await AsyncStorage.removeItem('user');
 };

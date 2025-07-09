@@ -9,7 +9,9 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loginUser } from '../services/authService';
+import { getChildrenByUser } from '../services/childApi';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -23,11 +25,34 @@ const LoginScreen = () => {
     }
 
     try {
-      const res = await loginUser({ email, password });
-      Alert.alert('Thành công', `Xin chào ${res.name}`);
-      navigation.navigate('Menu'); // chuyển sang trang chính
+      console.log('🔐 Gửi dữ liệu đăng nhập:', { email, password });
+
+      const user = await loginUser({ email, password });
+      console.log('✅ Phản hồi server:', user);
+
+      if (user.status === 'private') {
+        Alert.alert('Lỗi', 'Tài khoản đã bị khóa');
+        return;
+      }
+
+      // Lưu user vào AsyncStorage
+      await AsyncStorage.setItem('user', JSON.stringify(user));
+
+      // Kiểm tra hồ sơ trẻ
+      const userId = user._id || user.user_id;
+      console.log("👶 Đang lấy hồ sơ trẻ với userId:", userId);
+      const children = await getChildrenByUser(userId);
+      Alert.alert('Thành công', `Xin chào ${user.name}`);
+
+      if (children.length === 0) {
+        navigation.navigate('AddChild'); // chuyển đến thêm hồ sơ trẻ
+      } else {
+        navigation.navigate('Menu'); // nếu đã có hồ sơ trẻ
+      }
     } catch (err) {
-      const msg = err.response?.data?.message || 'Lỗi đăng nhập. Vui lòng thử lại.';
+      console.error('❌ Lỗi đăng nhập:', err);
+      const msg =
+        err?.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
       Alert.alert('Lỗi', msg);
     }
   };
@@ -60,7 +85,6 @@ const LoginScreen = () => {
         <TouchableOpacity onPress={() => navigation.navigate('PassReset')}>
           <Text style={styles.signupLink}>Quên mật khẩu   </Text>
         </TouchableOpacity>
-
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
           <Text style={styles.signupLink}>Tạo ngay!</Text>
         </TouchableOpacity>
@@ -82,7 +106,6 @@ const LoginScreen = () => {
 };
 
 export default LoginScreen;
-
 
 const styles = StyleSheet.create({
   container: {
@@ -126,10 +149,10 @@ const styles = StyleSheet.create({
   signupLink: {
     color: '#007bff',
     fontWeight: 'bold',
-    paddingTop:10,
+    paddingTop: 10,
   },
-  LoginButton:{
-    marginTop:30,
+  LoginButton: {
+    marginTop: 30,
   },
   socialButton: {
     flexDirection: 'row',
@@ -139,11 +162,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 12,
     marginBottom: 12,
-    
   },
   socialText: {
-    flex:1,
-    textAlign:'center',
+    flex: 1,
+    textAlign: 'center',
     fontSize: 16,
     color: '#333',
   },

@@ -10,30 +10,30 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { getCards } from '../api/PayApi'; // API lấy danh sách thẻ
+// import { getCards } from '../api/PayApi'; // API lấy danh sách thẻ
 
 const PaymentScreen = () => {
   const navigation = useNavigation();
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Lấy danh sách thẻ khi màn hình load
-  useEffect(() => {
-    fetchCards();
-  }, []);
+  // // Lấy danh sách thẻ khi màn hình load
+  // useEffect(() => {
+  //   fetchCards();
+  // }, []);
 
-  const fetchCards = async () => {
-    try {
-      setLoading(true);
-      const data = await getCards();
-      setCards(data);
-    } catch (error) {
-      Alert.alert('Lỗi', 'Không lấy được danh sách thẻ ngân hàng.');
-      console.error('Fetch cards error:', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchCards = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const data = await getCards();
+  //     setCards(data);
+  //   } catch (error) {
+  //     Alert.alert('Lỗi', 'Không lấy được danh sách thẻ ngân hàng.');
+  //     console.error('Fetch cards error:', error.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const renderCard = ({ item }) => (
     <TouchableOpacity

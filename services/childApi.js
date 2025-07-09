@@ -1,22 +1,46 @@
-import axios from 'axios';
-const API = 'http://192.168.52.106:3000/api/child';
+// src/services/childApi.js
+import api from './api';
 
-export const getChildrenByUser = async (userId) => {
-  const res = await axios.get(`${API}/user/${userId}`);
-  return res.data;
+// ✅ Lấy danh sách trẻ theo user_id
+export const getChildrenByUser = async (user_id) => {
+  try {
+    const res = await api.get(`/child?user_id=${user_id}`);
+    return res.data;
+  } catch (error) {
+    console.error('Lỗi khi lấy danh sách trẻ:', error);
+    return [];
+  }
 };
 
-export const addChild = async (child) => {
-  const res = await axios.post(`${API}`, child);
-  return res.data;
+// ✅ Tạo hồ sơ trẻ mới
+export const createChild = async (childData) => {
+  try {
+    const res = await api.post('/child', childData);
+    return res.data;
+  } catch (error) {
+    console.error('Lỗi khi tạo hồ sơ trẻ:', error);
+    throw error;
+  }
 };
 
-export const updateChild = async (id, data) => {
-  const res = await axios.put(`${API}/${id}`, data);
-  return res.data;
+// ✅ Cập nhật hồ sơ trẻ
+export const updateChild = async (childId, childData) => {
+  try {
+    const res = await api.put(`/child/${childId}`, childData);
+    return res.data;
+  } catch (error) {
+    console.error('Lỗi khi cập nhật hồ sơ trẻ:', error);
+    throw error;
+  }
 };
 
-export const deleteChild = async (id) => {
-  const res = await axios.delete(`${API}/${id}`);
-  return res.data;
+// ✅ Xóa hồ sơ trẻ
+export const deleteChild = async (childId) => {
+  try {
+    const res = await api.delete(`/child/${childId}`);
+    return res.data;
+  } catch (error) {
+    console.error('Lỗi khi xóa hồ sơ trẻ:', error);
+    throw error;
+  }
 };
