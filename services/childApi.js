@@ -12,6 +12,8 @@ export const getChildrenByUser = async (user_id) => {
   }
 };
 
+
+
 // ✅ Tạo hồ sơ trẻ mới
 export const createChild = async (childData) => {
   try {
@@ -23,13 +25,35 @@ export const createChild = async (childData) => {
   }
 };
 
-// ✅ Cập nhật hồ sơ trẻ
+// src/services/childApi.js
+export const uploadImage = async (uri) => {
+  const formData = new FormData();
+  formData.append('image', {
+    uri,
+    name: 'photo.jpg',
+    type: 'image/jpeg',
+  });
+
+  try {
+    const res = await api.post('/upload/upload-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data.url;
+  } catch (error) {
+    console.error('Lỗi upload ảnh:', error);
+    throw error;
+  }
+};
+
+
 export const updateChild = async (childId, childData) => {
   try {
     const res = await api.put(`/child/${childId}`, childData);
     return res.data;
   } catch (error) {
-    console.error('Lỗi khi cập nhật hồ sơ trẻ:', error);
+    console.error('Lỗi khi cập nhật hồ sơ trẻ:', error.response?.data || error.message);
     throw error;
   }
 };
@@ -44,3 +68,4 @@ export const deleteChild = async (childId) => {
     throw error;
   }
 };
+

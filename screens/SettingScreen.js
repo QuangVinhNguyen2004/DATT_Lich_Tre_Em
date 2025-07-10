@@ -1,68 +1,139 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 const SettingsScreen = () => {
-   const navigation = useNavigation();
-  const user = {
-    name: 'Nguyễn Thị Tuyết',
-    email: 'tuyet011@gmail.com',
-    phone: '09632567277',
+  const navigation = useNavigation();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Lấy thông tin user khi màn hình được focus
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchUser = async () => {
+        setLoading(true);
+        try {
+          const userData = await AsyncStorage.getItem('user');
+          if (userData) setUser(JSON.parse(userData));
+        } catch (error) {
+          console.error('Lỗi lấy thông tin user:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchUser();
+    }, [])
+  );
+
+  const handleLogout = () => {
+    Alert.alert('Xác nhận', 'Bạn có chắc muốn đăng xuất?', [
+      { text: 'Hủy', style: 'cancel' },
+      {
+        text: 'Đăng xuất',
+        style: 'destructive',
+        onPress: async () => {
+          await AsyncStorage.removeItem('user');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          });
+        },
+      },
+    ]);
   };
 
-  
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={styles.container}>
+        <Text>Không có thông tin người dùng.</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         <View style={styles.logoContainer}>
-          <Image source={require('../assets/img/logotreem.png')}
-          style={styles.logo}
+          <Image
+            source={require('../assets/img/logotreem.png')}
+            style={styles.logo}
           />
         </View>
 
         <View style={styles.infoCard}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{user.name}</Text>
-            <Text style={styles.email}>{user.email}</Text>
-            <Text style={styles.phone}>{user.phone}</Text>
+            <Text style={styles.name}>{user.name || user.fullName || 'Chưa có tên'}</Text>
+            <Text style={styles.email}>{user.email || 'Chưa có email'}</Text>
+            <Text style={styles.phone}>{user.phone || 'Chưa có số điện thoại'}</Text>
           </View>
           <TouchableOpacity onPress={() => navigation.navigate('UpdateAcc')}>
             <Text style={styles.editText}>Chỉnh sửa</Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity  style={styles.optionItem}>
-            <Text style={styles.optionText}>Quản lý tài khoản phụ</Text>
-            <Ionicons name="chevron-forward-outline" size={20} color="#000" />
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.optionItem}
+          onPress={() => navigation.navigate('SubAccounts')}
+        >
+          <Text style={styles.optionText}>Quản lý tài khoản phụ</Text>
+          <Ionicons name="chevron-forward-outline" size={20} color="#000" />
+        </TouchableOpacity>
 
-          <TouchableOpacity  style={styles.optionItem}>
-            <Text style={styles.optionText}>Nhật ký</Text>
-            <Ionicons name="chevron-forward-outline" size={20} color="#000" />
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.optionItem}
+          onPress={() => navigation.navigate('Diary')}
+        >
+          <Text style={styles.optionText}>Nhật ký</Text>
+          <Ionicons name="chevron-forward-outline" size={20} color="#000" />
+        </TouchableOpacity>
 
-          <TouchableOpacity  style={styles.optionItem} onPress={() => navigation.navigate('Pay')}>
-            <Text style={styles.optionText}>Thanh toán gia hạn</Text>
-            <Ionicons name="chevron-forward-outline" size={20} color="#000" />
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.optionItem}
+          onPress={() => navigation.navigate('Pay')}
+        >
+          <Text style={styles.optionText}>Thanh toán gia hạn</Text>
+          <Ionicons name="chevron-forward-outline" size={20} color="#000" />
+        </TouchableOpacity>
 
-          <TouchableOpacity  style={styles.optionItem}>
-            <Text style={styles.optionText}>Quản lý danh sách trẻ </Text>
-            <Ionicons name="chevron-forward-outline" size={20} color="#000" />
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.optionItem}
+          onPress={() => navigation.navigate('ListChild')}
+        >
+          <Text style={styles.optionText}>Quản lý danh sách trẻ</Text>
+          <Ionicons name="chevron-forward-outline" size={20} color="#000" />
+        </TouchableOpacity>
 
-          <TouchableOpacity  style={styles.optionItem}>
-            <Text style={styles.optionText}>Trợ giúp</Text>
-            <Ionicons name="chevron-forward-outline" size={20} color="#000" />
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.optionItem}
+          onPress={() => navigation.navigate('Help')}
+        >
+          <Text style={styles.optionText}>Trợ giúp</Text>
+          <Ionicons name="chevron-forward-outline" size={20} color="#000" />
+        </TouchableOpacity>
 
-        <TouchableOpacity style={styles.logoutBtn}>
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>
       </ScrollView>
-
-     
     </View>
   );
 };
@@ -133,5 +204,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-
 });

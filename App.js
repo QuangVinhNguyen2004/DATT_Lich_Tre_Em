@@ -9,13 +9,16 @@ import NotificationScreen from './screens/NotificationScreen';
 import PassResetScreen from './screens/PassReset';
 import PasswordResetNoticeScreen from './screens/NotiReset';
 import DiaryScreen from './screens/DiarySrceen';
-import UpdateAccScreen from './screens/UpdateAccScreen';
+import UpdateAccScreen from './screens/action/UpdateAccScreen';
 import PaymentScreen from './screens/PayScreen';
 import PostDetailScreen from './screens/PostdetailScreen';
 import AddPayScreen from './screens/AddPayScreen';
 import AddChildScreen from './screens/action/AddChild';
 import AddDiaryScreen from './screens/action/AddDiary';
 import AddPostScreen from './screens/action/AddPost';
+import ListChildScreen from './screens/ChildSrceen';
+import EditChildScreen from './screens/action/UpdateChild';
+
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -80,6 +83,8 @@ export default function App() {
         <Stack.Screen options={{ headerShown: false }} name="AddChild" component={AddChildScreen} /> 
         <Stack.Screen options={{ headerShown: false }} name="AddDiary" component={AddDiaryScreen} /> 
         <Stack.Screen options={{ headerShown: false }} name="AddPost" component={AddPostScreen} /> 
+        <Stack.Screen options={{ headerShown: false }} name="ListChild" component={ListChildScreen} /> 
+        <Stack.Screen options={{ headerShown: false }} name="EditChild" component={EditChildScreen} /> 
 
         </Stack.Navigator>
       </NavigationContainer>
