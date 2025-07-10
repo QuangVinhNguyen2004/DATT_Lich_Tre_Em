@@ -1,16 +1,26 @@
-// api/PostApi.js
-import axios from 'axios';
+import api from './api';
 
-const API = 'http://192.168.1.100:3000/api/post';
-
-// Lấy tất cả bài viết
-export const getPosts = async () => {
-  const res = await axios.get(API);
+// Lấy bài viết với filter params
+export const getPosts = async (params = {}) => {
+  const res = await api.get('/post', { params });
   return res.data;
 };
 
 // Thêm bài viết mới
 export const addPost = async (post) => {
-  const res = await axios.post(API, post);
+  try {
+    console.log('>> Gửi bài viết:', post); // Debug
+    const res = await api.post('/post', post);
+    return res.data;
+  } catch (err) {
+    console.error('❌ Lỗi khi thêm bài viết:', err.response?.data || err.message);
+    throw err;
+  }
+};
+// Xóa bài viết theo ID và user ID
+export const deletePostByUser = async (postId, userId) => {
+  const res = await api.delete(`/post/${postId}`, {
+    data: { userId },
+  });
   return res.data;
 };
