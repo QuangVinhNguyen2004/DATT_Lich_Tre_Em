@@ -14,6 +14,7 @@ import PaymentScreen from './screens/PayScreen';
 import PostDetailScreen from './screens/PostdetailScreen';
 import AddPayScreen from './screens/AddPayScreen';
 import AddChildScreen from './screens/action/AddChild';
+import AddDiaryScreen from './screens/action/AddDiary';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -75,6 +76,7 @@ export default function App() {
         <Stack.Screen options={{ headerShown: false }} name="Pay" component={PaymentScreen} /> 
         <Stack.Screen options={{ headerShown: false }} name="Postdetail" component={PostDetailScreen} /> 
         <Stack.Screen options={{ headerShown: false }} name="AddChild" component={AddChildScreen} /> 
+        <Stack.Screen options={{ headerShown: false }} name="AddDiary" component={AddDiaryScreen} /> 
 
         </Stack.Navigator>
       </NavigationContainer>
