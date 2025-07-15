@@ -24,7 +24,10 @@ import {
   updateSchedule,
   deleteSchedule,
 } from '../services/ScheduleApi';
-
+import {
+  requestNotificationPermission,
+  scheduleAllNotifications,
+} from '../services/notificationApi';
 const HomeScreen = () => {
   const navigation = useNavigation();
 
@@ -74,21 +77,24 @@ const HomeScreen = () => {
   );
 
   // Lấy lịch trình khi chọn trẻ thay đổi
-  useEffect(() => {
-    if (!selectedChild) {
-      setSchedules([]);
-      return;
+useEffect(() => {
+  if (!selectedChild) {
+    setSchedules([]);
+    return;
+  }
+  const fetchSchedules = async () => {
+    try {
+      const data = await getSchedulesByChild(selectedChild._id);
+      setSchedules(data || []);
+      // Lên lịch thông báo khi có lịch trình mới
+      await requestNotificationPermission();
+      await scheduleAllNotifications(data || []);
+    } catch (error) {
+      console.error('Lỗi lấy lịch trình:', error);
     }
-    const fetchSchedules = async () => {
-      try {
-        const data = await getSchedulesByChild(selectedChild._id);
-        setSchedules(data || []);
-      } catch (error) {
-        console.error('Lỗi lấy lịch trình:', error);
-      }
-    };
-    fetchSchedules();
-  }, [selectedChild]);
+  };
+  fetchSchedules();
+}, [selectedChild]);
 
   // Reset form
   const resetForm = () => {

@@ -1,16 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getAllNotifications } from '../services/notificationApi';
+import { useRoute } from '@react-navigation/native';
+import { getNotificationsByChild } from '../services/notificationApi';
 
 const NotificationScreen = () => {
+  const route = useRoute();
+  const childId = 
+'686e8e4a3439d61115567b6a';
+
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!childId) {
+      setLoading(false);
+      return;
+    }
     const fetchNotifications = async () => {
       try {
-        const data = await getAllNotifications();
+        const data = await getNotificationsByChild(childId);
+        console.log('Notifications fetched:', data);
         setNotifications(data);
       } catch (error) {
         console.error('Lỗi khi lấy thông báo:', error);
@@ -19,8 +29,10 @@ const NotificationScreen = () => {
       }
     };
 
-    fetchNotifications();
-  }, []);
+    const intervalId = setInterval(fetchNotifications, 30000); 
+
+  return () => clearInterval(intervalId); 
+  }, [childId]);
 
   const formatTime = (isoTime) => {
     const date = new Date(isoTime);
@@ -38,10 +50,12 @@ const NotificationScreen = () => {
 
       {loading ? (
         <ActivityIndicator size="large" color="#000" />
+      ) : notifications.length === 0 ? (
+        <Text style={styles.noNotificationsText}>Không có thông báo nào.</Text>
       ) : (
         <ScrollView style={styles.listContainer}>
-          {notifications.map((item, index) => (
-            <View key={item._id || index} style={styles.notificationItem}>
+          {notifications.map((item) => (
+            <View key={item._id} style={styles.notificationItem}>
               <View style={styles.iconWrapper}>
                 <Ionicons name="notifications-outline" size={24} color="#000" />
               </View>
@@ -60,21 +74,9 @@ const NotificationScreen = () => {
 export default NotificationScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 24,
-    paddingTop: 60,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  listContainer: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 24, paddingTop: 60 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  listContainer: { flex: 1 },
   notificationItem: {
     backgroundColor: '#f4f4f4',
     borderRadius: 12,
@@ -83,18 +85,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
-  iconWrapper: {
-    marginRight: 12,
-    position: 'relative',
-    marginTop: 4,
-  },
-  time: {
-    fontWeight: '600',
-    marginBottom: 4,
-    color: '#000',
-  },
-  message: {
-    color: '#333',
-    fontSize: 14,
-  },
+  iconWrapper: { marginRight: 12, marginTop: 4 },
+  time: { fontWeight: '600', marginBottom: 4, color: '#000' },
+  message: { color: '#333', fontSize: 14 },
+  noNotificationsText: { textAlign: 'center', marginTop: 20, fontSize: 16, color: '#666' },
 });
