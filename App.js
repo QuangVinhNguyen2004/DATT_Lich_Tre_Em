@@ -18,7 +18,8 @@ import AddDiaryScreen from './screens/action/AddDiary';
 import AddPostScreen from './screens/action/AddPost';
 import ListChildScreen from './screens/ChildSrceen';
 import EditChildScreen from './screens/action/UpdateChild';
-
+import SubUserScreen from './screens/SubUserScreen';
+import SubAccountForm from './screens/action/AddSub';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -85,6 +86,9 @@ export default function App() {
         <Stack.Screen options={{ headerShown: false }} name="AddPost" component={AddPostScreen} /> 
         <Stack.Screen options={{ headerShown: false }} name="ListChild" component={ListChildScreen} /> 
         <Stack.Screen options={{ headerShown: false }} name="EditChild" component={EditChildScreen} /> 
+        <Stack.Screen options={{ headerShown: false }} name="SubUser" component={SubUserScreen} /> 
+        <Stack.Screen options={{ headerShown: false }} name="SubAccountForm" component={SubAccountForm} />
+        
 
         </Stack.Navigator>
       </NavigationContainer>

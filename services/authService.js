@@ -2,12 +2,17 @@ import api from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Đăng nhập
+// Đăng nhập tài khoản chính (user)
 export const loginUser = async ({ email, password }) => {
   const res = await api.post('/user/login', { email, password });
+  await AsyncStorage.setItem('user', JSON.stringify({ ...res.data, accountType: 'main' }));
+  return res.data;
+};
 
-  // ✅ Lưu toàn bộ user (bao gồm token) nếu đăng nhập thành công
-  await AsyncStorage.setItem('user', JSON.stringify(res.data));
-
+// Đăng nhập tài khoản phụ (subuser)
+export const loginSubUser = async ({ email, password }) => {
+  const res = await api.post('/user/login-subuser', { email, password });
+  await AsyncStorage.setItem('user', JSON.stringify({ ...res.data, accountType: 'sub' }));
   return res.data;
 };
 

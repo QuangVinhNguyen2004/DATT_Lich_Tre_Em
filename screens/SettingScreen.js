@@ -92,7 +92,7 @@ const SettingsScreen = () => {
 
         <TouchableOpacity
           style={styles.optionItem}
-          onPress={() => navigation.navigate('SubAccounts')}
+          onPress={() => navigation.navigate('SubUser')}
         >
           <Text style={styles.optionText}>Quản lý tài khoản phụ</Text>
           <Ionicons name="chevron-forward-outline" size={20} color="#000" />
