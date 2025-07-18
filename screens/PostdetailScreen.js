@@ -53,11 +53,7 @@ const PostDetailScreen = ({ route }) => {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>{post.tieu_de}</Text>
-      <Text style={styles.category}>Loại: {post.loai || 'Không xác định'}</Text>
-      <Text style={styles.status}>Trạng thái: {post.trang_thai || 'Không rõ'}</Text>
 
-      <Text style={styles.content}>Nội dung:{post.noi_dung}</Text>
 
       {/* Video nếu có */}
       {post.video ? (
@@ -89,6 +85,11 @@ const PostDetailScreen = ({ route }) => {
           ))}
         </ScrollView>
       )}
+        <Text style={styles.title}>{post.tieu_de}</Text>
+      <Text style={styles.category}>Loại: {post.loai || 'Không xác định'}</Text>
+      <Text style={styles.status}>Trạng thái: {post.trang_thai || 'Không rõ'}</Text>
+
+      <Text style={styles.content}>Nội dung:{post.noi_dung}</Text>
     </ScrollView>
   );
 };

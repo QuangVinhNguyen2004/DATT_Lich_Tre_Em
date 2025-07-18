@@ -83,7 +83,6 @@ const SettingsScreen = () => {
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{user.name || user.fullName || 'Chưa có tên'}</Text>
             <Text style={styles.email}>{user.email || 'Chưa có email'}</Text>
-            <Text style={styles.phone}>{user.phone || 'Chưa có số điện thoại'}</Text>
           </View>
           <TouchableOpacity onPress={() => navigation.navigate('UpdateAcc')}>
             <Text style={styles.editText}>Chỉnh sửa</Text>

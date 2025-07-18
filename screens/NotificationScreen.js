@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,26 +9,24 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useChild } from '../context/ChildContext';
 import { getNotificationsByChild } from '../services/notificationApi';
-
+import { useChild } from '../context/ChildContext';
 const NotificationScreen = () => {
-  const { selectedChild } = useChild();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { selectedChild } = useChild();
+  
+  const childId =selectedChild._id; 
 
   useFocusEffect(
     useCallback(() => {
-      if (!selectedChild) {
-        setNotifications([]);
-        return;
-      }
-
       const fetchNotifications = async () => {
         try {
           setLoading(true);
-          const data = await getNotificationsByChild(selectedChild._id);
-          setNotifications(data || []);
+          const data = await getNotificationsByChild(childId);
+          console.log('id child:', childId);
+          console.log('data:', data);
+          setNotifications(data.notifications || []);
         } catch (error) {
           Alert.alert('Lỗi', 'Không thể tải thông báo. Vui lòng thử lại.');
           console.error('Lỗi lấy thông báo:', error);
@@ -38,7 +36,7 @@ const NotificationScreen = () => {
       };
 
       fetchNotifications();
-    }, [selectedChild])
+    }, [childId])
   );
 
   const renderItem = ({ item }) => {
@@ -65,10 +63,6 @@ const NotificationScreen = () => {
         {loading ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color="#198754" />
-          </View>
-        ) : !selectedChild ? (
-          <View style={styles.center}>
-            <Text style={styles.message}>Vui lòng chọn trẻ để xem thông báo.</Text>
           </View>
         ) : notifications.length === 0 ? (
           <View style={styles.center}>

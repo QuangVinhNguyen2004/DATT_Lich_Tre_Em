@@ -10,99 +10,89 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loginUser } from '../services/authService';
+import { loginUser ,loginSubUser } from '../services/authService';
 import { getChildrenByUser } from '../services/childApi';
-import { getUserById } from '../services/userApi'; // Hàm lấy user chính theo id
+import { getUserById } from '../services/userApi'; 
 
 const LoginScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Lỗi', 'Vui lòng nhập email và mật khẩu');
-      return;
-    }
+const handleLogin = async () => {
+  if (!email || !password) {
+    Alert.alert('Lỗi', 'Vui lòng nhập email và mật khẩu');
+    return;
+  }
 
-    try {
-      console.log('🔐 Gửi dữ liệu đăng nhập:', { email, password });
+  try {
+    console.log('🔐 Thử đăng nhập tài khoản chính...');
 
-      const user = await loginUser({ email, password });
-      console.log('✅ Phản hồi server:', user);
+    // Thử đăng nhập bằng tài khoản chính
+    const main = await loginUser({ email, password }); // gọi /auth/login
 
-      if (!user) {
-        Alert.alert('Lỗi', 'Đăng nhập thất bại');
+    if (main) {
+      if (main.status === 'private') {
+        Alert.alert('Lỗi', 'Tài khoản chính đã bị khóa');
         return;
       }
 
-      // Nếu tài khoản chính (có role)
-      if (user.role) {
-        if (user.status === 'private') {
-          Alert.alert('Lỗi', 'Tài khoản chính đã bị khóa');
-          return;
-        }
+      await AsyncStorage.setItem('user', JSON.stringify({
+        ...main,
+        accountType: 'main',
+      }));
 
-        // Lưu thông tin user chính và loại tài khoản
-        await AsyncStorage.setItem(
-          'user',
-          JSON.stringify({
-            ...user,
-            accountType: 'main',
-          })
-        );
+      const children = await getChildrenByUser(main._id);
 
-        // Kiểm tra hồ sơ trẻ
-        const children = await getChildrenByUser(user._id);
-
-        Alert.alert('Thành công', `Xin chào ${user.name}`);
-
-        if (children.length === 0) {
-          navigation.navigate('AddChild'); // Chưa có hồ sơ trẻ
-        } else {
-          navigation.navigate('Menu'); // Có hồ sơ trẻ
-        }
-      }
-      // Nếu tài khoản phụ (không có role nhưng có user_id tham chiếu)
-      else if (!user.role && user.user_id) {
-        // Lấy tài khoản chính tham chiếu
-        const mainUser = await getUserById(user.user_id);
-
-        if (!mainUser) {
-          Alert.alert('Lỗi', 'Tài khoản chính liên kết không tồn tại');
-          return;
-        }
-        if (mainUser.status === 'private') {
-          Alert.alert(
-            'Lỗi',
-            'Tài khoản chính đã bị khóa, tài khoản phụ không thể đăng nhập'
-          );
-          return;
-        }
-
-        // Lưu tài khoản phụ, kèm thông tin user chính và loại tài khoản
-        await AsyncStorage.setItem(
-          'user',
-          JSON.stringify({
-            ...user,
-            accountType: 'sub',
-            mainUser,
-          })
-        );
-
-        Alert.alert('Thành công', `Xin chào ${user.name}`);
-
-        // Vào luôn màn Menu, bỏ qua kiểm tra child
-        navigation.navigate('Menu');
+      Alert.alert('Thành công', `Xin chào ${main.name}`);
+      if (children.length === 0) {
+        navigation.navigate('AddChild');
       } else {
-        Alert.alert('Lỗi', 'Loại tài khoản không hợp lệ');
+        navigation.navigate('Menu');
       }
-    } catch (err) {
-      console.error('❌ Lỗi đăng nhập:', err);
-      const msg = err?.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
-      Alert.alert('Lỗi', msg);
+      return;
     }
-  };
+  } catch (err) {
+    console.log('🟡 Không phải tài khoản chính. Thử đăng nhập phụ...');
+  }
+
+  // Nếu không phải tài khoản chính, thử đăng nhập phụ
+  try {
+    const res = await loginSubUser({ email, password }); // gọi /sub-users/login
+    const user = res.subUser;
+
+    if (!user) {
+      Alert.alert('Lỗi', 'Tài khoản phụ không tồn tại');
+      return;
+    }
+
+    const mainUser = await getUserById(user.user_id);
+    if (!mainUser) {
+      Alert.alert('Lỗi', 'Tài khoản chính liên kết không tồn tại');
+      return;
+    }
+
+    if (mainUser.status === 'private') {
+      Alert.alert('Lỗi', 'Tài khoản chính đã bị khóa, tài khoản phụ không thể đăng nhập');
+      return;
+    }
+
+    await AsyncStorage.setItem('user', JSON.stringify({
+      ...user,
+      accountType: 'sub',
+      mainUser,
+    }));
+
+    Alert.alert('Thành công', `Xin chào ${user.name}`);
+    navigation.navigate('Menu');
+  } catch (err) {
+    console.error('❌ Lỗi đăng nhập:', err?.response?.data || err.message);
+    const msg = err?.response?.data?.error || 'Đăng nhập thất bại. Vui lòng thử lại.';
+    Alert.alert('Lỗi', msg);
+  }
+};
+
+
 
   return (
     <View style={styles.container}>

@@ -11,7 +11,7 @@ export const loginUser = async ({ email, password }) => {
 
 // Đăng nhập tài khoản phụ (subuser)
 export const loginSubUser = async ({ email, password }) => {
-  const res = await api.post('/user/login-subuser', { email, password });
+  const res = await api.post('/sub-users/login', { email, password });
   await AsyncStorage.setItem('user', JSON.stringify({ ...res.data, accountType: 'sub' }));
   return res.data;
 };

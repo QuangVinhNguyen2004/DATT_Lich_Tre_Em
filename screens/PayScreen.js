@@ -1,124 +1,190 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  Alert,
+  View, Text, TouchableOpacity, Alert, StyleSheet,
+  Modal
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
+import { TextInput } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-// import { getCards } from '../api/PayApi'; // API lấy danh sách thẻ
+import { createPayment } from '../services/PayApi';
 
-const PaymentScreen = () => {
+export default function PaymentScreen() {
   const navigation = useNavigation();
-  const [cards, setCards] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [months, setMonths] = useState(1);
+  const [method, setMethod] = useState('Chuyển khoản ATM');
+  const [showModal, setShowModal] = useState(false);
 
-  // // Lấy danh sách thẻ khi màn hình load
-  // useEffect(() => {
-  //   fetchCards();
-  // }, []);
+  // Modal state
+  const [selectedBank, setSelectedBank] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardHolder, setCardHolder] = useState('');
 
-  // const fetchCards = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const data = await getCards();
-  //     setCards(data);
-  //   } catch (error) {
-  //     Alert.alert('Lỗi', 'Không lấy được danh sách thẻ ngân hàng.');
-  //     console.error('Fetch cards error:', error.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  const amountPerMonth = 50000;
+  const totalAmount = months * amountPerMonth;
 
-  const renderCard = ({ item }) => (
-    <TouchableOpacity
-      style={styles.cardItem}
-      onPress={() => navigation.navigate('AddPay', { card: item })}
-    >
-      <Text style={styles.cardText}>
-        **** {item.so_tai_khoan.slice(-6)}{' '}
-        <Text style={styles.bankText}>{item.ten_ngan_hang}</Text>
-      </Text>
-      <Ionicons name="chevron-forward" size={20} color="black" />
-    </TouchableOpacity>
-  );
+  const MOCK_DATA = {
+    bankName: 'Vietcombank',
+    cardNumber: '1035734330',
+    cardHolder: 'Nguyen Van A',
+  };
+
+  const bankOptions = [
+    { label: 'Vietcombank', value: 'Vietcombank' },
+    { label: 'Techcombank', value: 'Techcombank' },
+    { label: 'MB Bank', value: 'MB Bank' },
+    { label: 'Agribank', value: 'Agribank' },
+    { label: 'BIDV', value: 'BIDV' },
+  ];
+
+  const handleConfirmPayment = async () => {
+    if (
+      selectedBank.toLowerCase() === MOCK_DATA.bankName.toLowerCase() &&
+      cardNumber === MOCK_DATA.cardNumber &&
+      cardHolder.toLowerCase() === MOCK_DATA.cardHolder.toLowerCase()
+    ) {
+      try {
+        const userData = await AsyncStorage.getItem('user');
+        const user = JSON.parse(userData);
+
+        const res = await createPayment({
+          user_id: user._id,
+          amount: totalAmount,
+          duration: months * 30,
+          method,
+        });
+
+        Alert.alert('✅ Thành công', res.message);
+        setShowModal(false);
+        navigation.navigate('PaymentHistory');
+      } catch (err) {
+        Alert.alert('❌ Lỗi', 'Không thể thanh toán');
+      }
+    } else {
+      Alert.alert('⚠️ Thông tin không đúng', 'Vui lòng kiểm tra lại thông tin ngân hàng');
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Thanh toán</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <Text style={styles.label}>Gia hạn tài khoản</Text>
 
-      {/* Thêm thẻ ngân hàng */}
-      <Text style={styles.sectionTitle}>Thêm thẻ Ngân hàng</Text>
+      <Text style={styles.label}>Chọn thời gian:</Text>
+      <Picker
+        selectedValue={months}
+        onValueChange={setMonths}
+        style={styles.picker}
+      >
+        <Picker.Item label="1 tháng" value={1} />
+        <Picker.Item label="3 tháng" value={3} />
+        <Picker.Item label="6 tháng" value={6} />
+        <Picker.Item label="12 tháng" value={12} />
+      </Picker>
 
-      {/* Danh sách thẻ */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 20 }} />
-      ) : (
-        <FlatList
-          data={cards}
-          keyExtractor={(item) => item._id}
-          renderItem={renderCard}
-          contentContainerStyle={{ gap: 12, paddingBottom: 20 }}
-          ListEmptyComponent={
-            <Text style={{ textAlign: 'center', marginTop: 20, color: '#888' }}>
-              Không có thẻ ngân hàng nào.
-            </Text>
-          }
-        />
-      )}
+      <Text style={styles.label}>Số tiền:</Text>
+      <Text style={styles.amount}>{totalAmount.toLocaleString('vi-VN')} đ</Text>
+
+      <Text style={styles.label}>Phương thức thanh toán:</Text>
+      <Picker
+        selectedValue={method}
+        onValueChange={setMethod}
+        style={styles.picker}
+      >
+        <Picker.Item label="Chuyển khoản ATM" value="Chuyển khoản ATM" />
+      </Picker>
+
+      <TouchableOpacity onPress={() => setShowModal(true)} style={styles.button}>
+        <Text style={styles.btnText}>Thanh toán</Text>
+      </TouchableOpacity>
+
+      {/* Modal */}
+      <Modal visible={showModal} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalBox}>
+            <Text style={styles.label}>Xác nhận thanh toán</Text>
+
+            <Text style={{ marginBottom: 4 }}>Ngân hàng:</Text>
+            <Picker
+              selectedValue={selectedBank}
+              onValueChange={setSelectedBank}
+              style={styles.picker}
+            >
+              <Picker.Item label="-- Chọn ngân hàng --" value="" />
+              {bankOptions.map((bank) => (
+                <Picker.Item
+                  key={bank.value}
+                  label={bank.label}
+                  value={bank.value}
+                />
+              ))}
+            </Picker>
+
+            <TextInput
+              placeholder="Số thẻ"
+              keyboardType="numeric"
+              style={styles.input}
+              value={cardNumber}
+              onChangeText={setCardNumber}
+            />
+            <TextInput
+              placeholder="Chủ thẻ"
+              style={styles.input}
+              value={cardHolder}
+              onChangeText={setCardHolder}
+            />
+
+            <TouchableOpacity style={styles.modalBtn} onPress={handleConfirmPayment}>
+              <Text style={styles.btnText}>Xác nhận thanh toán</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setShowModal(false)}
+              style={[styles.modalBtn, { backgroundColor: 'gray' }]}
+            >
+              <Text style={styles.btnText}>Hủy</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
-};
-
-export default PaymentScreen;
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 24,
-    paddingTop: 60,
+  container: { padding: 16, backgroundColor: '#fff', flex: 1 },
+  label: { fontWeight: 'bold', marginTop: 16 },
+  picker: {
+    backgroundColor: '#f0f0f0',
+    marginVertical: 8,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 20,
+  amount: {
+    fontSize: 18,
     fontWeight: 'bold',
+    marginVertical: 8,
+    color: 'green',
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 16,
+  button: {
+    backgroundColor: 'green',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 20,
   },
-  cardItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f2f2f2',
-    borderRadius: 12,
-    padding: 16,
+  btnText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
+
+  modalContainer: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center', alignItems: 'center',
   },
-  cardText: {
-    fontSize: 16,
-    fontWeight: '500',
+  modalBox: {
+    width: '90%', backgroundColor: 'white',
+    borderRadius: 10, padding: 20,
   },
-  bankText: {
-    fontWeight: 'bold',
+  input: {
+    borderWidth: 1, borderColor: '#ccc',
+    padding: 10, borderRadius: 8, marginVertical: 8,
+  },
+  modalBtn: {
+    backgroundColor: 'green', padding: 12,
+    borderRadius: 8, marginTop: 10,
   },
 });
