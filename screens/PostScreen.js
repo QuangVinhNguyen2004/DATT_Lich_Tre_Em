@@ -139,39 +139,40 @@ const PostScreen = () => {
       ) : posts.length === 0 ? (
         <Text style={styles.emptyText}>Không có bài viết nào phù hợp.</Text>
       ) : (
-        <ScrollView style={styles.listContainer}>
-          {posts.map((post) => (
-            <TouchableOpacity
-              key={post._id}
-              style={styles.postItem}
-              onPress={() => {
-                if (post.user?._id === userId) {
-                  confirmDelete(post._id);
-                } else {
-                  Alert.alert('Không thể xóa', 'Bạn chỉ có thể xóa bài viết của mình.');
-                }
-              }}
-            >
-              <Ionicons
-                name="document-text-outline"
-                size={24}
-                color="black"
-                style={{ marginRight: 10 }}
-              />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.postCategory}>Loại: {post.loai}</Text>
-                <Text style={styles.postTime}>Trạng thái: {post.trang_thai}</Text>
-                <Text numberOfLines={2} style={{ marginBottom: 4 }}>
-                  Nội dung: {post.noi_dung}
-                </Text>
-                <Text style={styles.postTime}>
-                  {new Date(post.createdAt || post.thoi_gian_tao).toLocaleString()}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward-outline" size={20} color="black" />
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+<ScrollView style={styles.listContainer}>
+  {posts.map((post) => (
+    <TouchableOpacity
+      key={post._id}
+      style={styles.postItem}
+      onPress={() => navigation.navigate('Postdetail', { postId: post._id })}
+      onLongPress={() => {
+        if (post.user?._id === userId) {
+          confirmDelete(post._id);
+        } else {
+          Alert.alert('Không thể xóa', 'Bạn chỉ có thể xóa bài viết của mình.');
+        }
+      }}
+    >
+      <Ionicons
+        name="document-text-outline"
+        size={24}
+        color="black"
+        style={{ marginRight: 10 }}
+      />
+      <View style={{ flex: 1 }}>
+        <Text style={styles.postCategory}>Loại: {post.loai}</Text>
+        <Text style={styles.postTime}>Trạng thái: {post.trang_thai}</Text>
+        <Text numberOfLines={2} style={{ marginBottom: 4 }}>
+          Nội dung: {post.noi_dung}
+        </Text>
+        <Text style={styles.postTime}>
+          {new Date(post.createdAt || post.thoi_gian_tao).toLocaleString()}
+        </Text>
+      </View>
+      <Ionicons name="chevron-forward-outline" size={20} color="black" />
+    </TouchableOpacity>
+  ))}
+</ScrollView>
       )}
 
       <TouchableOpacity

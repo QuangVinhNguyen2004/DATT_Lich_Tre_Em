@@ -1,66 +1,94 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
-  TouchableOpacity
+  Image,
+  ActivityIndicator,
+  StyleSheet,
+  Dimensions,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { Video } from 'expo-av';
 
-const PostDetailScreen = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
-  const { post } = route.params;
+const screenWidth = Dimensions.get('window').width;
+
+const PostDetailScreen = ({ route }) => {
+  const { postId } = route.params;
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchPostDetail = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`http://192.168.52.104:3000/api/post/${postId}`);
+        if (!res.ok) throw new Error('Lỗi tải bài viết');
+        const data = await res.json();
+        setPost(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPostDetail();
+  }, [postId]);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
+  if (!post) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.emptyText}>Không tìm thấy bài viết</Text>
+      </View>
+    );
+  }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Chi tiết bài viết</Text>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <Text style={styles.title}>{post.tieu_de}</Text>
+      <Text style={styles.category}>Loại: {post.loai || 'Không xác định'}</Text>
+      <Text style={styles.status}>Trạng thái: {post.trang_thai || 'Không rõ'}</Text>
 
-      <View style={styles.box}>
-        <Text style={styles.label}>Mã bài :</Text>
-        <Text style={styles.content}>{post._id}</Text>
-      </View>
+      <Text style={styles.content}>Nội dung:{post.noi_dung}</Text>
 
-      <View style={styles.box}>
-        <Text style={styles.label}>Loại bài:</Text>
-        <Text style={styles.content}>{post.loai}</Text>
-      </View>
+      {/* Video nếu có */}
+      {post.video ? (
+        <Video
+          source={{ uri: `http://192.168.52.104:3000${post.video}` }}
+          style={styles.video}
+          useNativeControls
+          resizeMode="contain"
+          isLooping
+          shouldPlay={false}
+        />
+      ) : null}
 
-      <View style={styles.box}>
-        <Text style={styles.label}>Nội dung:</Text>
-        <Text style={styles.content}>{post.noi_dung}</Text>
-      </View>
-
-      <View style={styles.box}>
-        <Text style={styles.label}>Trạng thái:</Text>
-        <Text style={styles.content}>{post.trang_thai}</Text>
-      </View>
-
-      <View style={styles.box}>
-        <Text style={styles.label}>Thời gian tạo:</Text>
-        <Text style={styles.content}>
-          {new Date(post.createdAt).toLocaleString('vi-VN')}
-        </Text>
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
+      {/* Hiển thị ảnh nếu có */}
+      {post.anh && post.anh.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.imageScroll}
+          contentContainerStyle={{ paddingHorizontal: 8 }}
         >
-          <Text style={styles.buttonText}>Trở lại</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => {
-            // TODO: thêm chức năng xóa nếu cần
-          }}
-        >
-          <Text style={styles.buttonText}>Xóa</Text>
-        </TouchableOpacity>
-      </View>
+          {post.anh.map((imgUrl, index) => (
+            <Image
+              key={index}
+              source={{ uri: `http://192.168.52.104:3000${imgUrl}` }}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          ))}
+        </ScrollView>
+      )}
     </ScrollView>
   );
 };
@@ -70,55 +98,56 @@ export default PostDetailScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
     backgroundColor: '#fff',
+    padding: 16,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#888',
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    alignSelf: 'center',
-    marginBottom: 24,
-    marginTop: 10,
+    fontSize: 26,
+    fontWeight: '700',
+    marginBottom: 6,
+    color: '#222',
   },
-  box: {
-    backgroundColor: '#f2f2f2',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  label: {
+  category: {
     fontSize: 14,
-    color: '#777',
-    marginBottom: 4,
+    fontWeight: '600',
+    color: '#555',
+    marginBottom: 2,
+  },
+  status: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#007AFF',
+    marginBottom: 12,
   },
   content: {
     fontSize: 16,
-    fontWeight: '500',
+    color: '#333',
+    lineHeight: 24,
+    marginBottom: 24,
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    marginTop: 32,
+  video: {
+    width: '100%',
+    height: 220,
+    borderRadius: 12,
+    marginBottom: 24,
+    backgroundColor: '#000',
   },
-  backButton: {
-    backgroundColor: '#ff7070',
-    borderRadius: 50,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderWidth: 1,
-    borderColor: '#000',
+  imageScroll: {
+    marginBottom: 32,
   },
-  deleteButton: {
-    backgroundColor: '#66ff66',
-    borderRadius: 50,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderWidth: 1,
-    borderColor: '#000',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#000',
+  image: {
+    width: screenWidth * 0.7,
+    height: 220,
+    borderRadius: 12,
+    marginRight: 12,
   },
 });
