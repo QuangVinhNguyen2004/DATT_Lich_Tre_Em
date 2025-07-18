@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,14 +11,14 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
-import { updateChild, uploadImage } from '../../services/childApi';
+import { updateChild } from '../../services/childApi';
 
 const EditChildScreen = ({ route, navigation }) => {
   const { child } = route.params;
 
   const [name, setName] = useState(child.name || '');
   const [age, setAge] = useState(child.age ? String(child.age) : '');
-  const [birthDate, setBirthDate] = useState(new Date(child.birth_date) || new Date());
+  const [birthDate, setBirthDate] = useState(new Date(child.birth_date));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [gender, setGender] = useState(child.gender || 'Nam');
   const [weight, setWeight] = useState(child.weight ? String(child.weight) : '');
@@ -29,8 +29,9 @@ const EditChildScreen = ({ route, navigation }) => {
     setShowDatePicker(false);
     if (selectedDate) {
       setBirthDate(selectedDate);
-      const diff = new Date().getFullYear() - selectedDate.getFullYear();
-      setAge(diff.toString());
+      const today = new Date();
+      const yearDiff = today.getFullYear() - selectedDate.getFullYear();
+      setAge(yearDiff.toString());
     }
   };
 
@@ -41,52 +42,33 @@ const EditChildScreen = ({ route, navigation }) => {
       allowsEditing: true,
     });
 
-    if (!result.canceled) {
+    if (!result.canceled && result.assets?.length > 0) {
       setImg(result.assets[0].uri);
     }
   };
 
   const handleUpdate = async () => {
-    if (!name.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tên');
-      return;
-    }
-    if (!age.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tuổi');
+    if (!name.trim() || !age.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
       return;
     }
 
     setLoading(true);
     try {
-      let imgUrl = img;
-      // Nếu ảnh là URI local (file://), upload lên server trước
-      if (img && img.startsWith('file://')) {
-        console.log('Bắt đầu upload ảnh...');
-        imgUrl = await uploadImage(img);
-        console.log('Ảnh đã upload, URL:', imgUrl);
-      }
-
       const updatedChild = {
         name: name.trim(),
         age: Number(age),
         birth_date: birthDate,
         gender,
         weight: weight ? Number(weight) : undefined,
-        img: imgUrl,
+        img,
       };
 
-      console.log('Dữ liệu gửi cập nhật:', updatedChild);
-
       await updateChild(child._id, updatedChild);
-
       Alert.alert('Thành công', 'Cập nhật hồ sơ trẻ thành công');
       navigation.goBack();
     } catch (error) {
-      console.error('Lỗi khi cập nhật hồ sơ trẻ:', error);
-      if (error.response) {
-        console.error('Response data:', error.response.data);
-        console.error('Response status:', error.response.status);
-      }
+      console.error('Lỗi cập nhật:', error);
       Alert.alert('Lỗi', 'Cập nhật thất bại, vui lòng thử lại');
     } finally {
       setLoading(false);
@@ -171,7 +153,7 @@ export default EditChildScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 24 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 24, textAlign: 'center' },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',

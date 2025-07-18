@@ -103,7 +103,7 @@ const handleAddPost = async () => {
     formData.append('tieu_de', title.trim());
     formData.append('noi_dung', content.trim());
     formData.append('loai', type);
-    formData.append('trang_thai', type === 'Gia đình' ? 'đã duyệt' : 'chờ duyệt');
+    formData.append('trang_thai', type.toLowerCase() === 'gia đình' ? 'đã duyệt' : 'chờ duyệt');
 
     // Ảnh
     images.forEach((img, index) => {

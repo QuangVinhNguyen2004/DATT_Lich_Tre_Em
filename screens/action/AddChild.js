@@ -30,19 +30,20 @@ const AddChildScreen = () => {
     setShowDatePicker(false);
     if (selectedDate) {
       setBirthDate(selectedDate);
-      const diff = new Date().getFullYear() - selectedDate.getFullYear();
-      setAge(diff.toString());
+      const today = new Date();
+      const yearDiff = today.getFullYear() - selectedDate.getFullYear();
+      setAge(yearDiff.toString());
     }
   };
 
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: [ImagePicker.MediaType.IMAGE],
-      quality: 1,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
+      quality: 1,
     });
 
-    if (!result.canceled) {
+    if (!result.canceled && result.assets?.length > 0) {
       setImg(result.assets[0].uri);
     }
   };
@@ -74,7 +75,7 @@ const AddChildScreen = () => {
       };
 
       await createChild(newChild);
-      Alert.alert('Thành công', 'Đã thêm hồ sơ trẻ em');
+      Alert.alert('Thành công', 'Đã thêm hồ sơ trẻ');
       navigation.navigate('Menu');
     } catch (error) {
       console.error('Lỗi thêm hồ sơ trẻ:', error);
@@ -140,7 +141,9 @@ const AddChildScreen = () => {
       />
 
       <TouchableOpacity style={styles.imageButton} onPress={handlePickImage}>
-        <Text style={{ color: '#007bff' }}>{img ? 'Đổi ảnh' : 'Chọn ảnh từ thư viện'}</Text>
+        <Text style={{ color: '#007bff' }}>
+          {img ? 'Đổi ảnh' : 'Chọn ảnh từ thư viện'}
+        </Text>
       </TouchableOpacity>
 
       {img && <Image source={{ uri: img }} style={styles.imagePreview} />}
@@ -164,6 +167,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 24,
+    textAlign: 'center',
   },
   input: {
     borderWidth: 1,

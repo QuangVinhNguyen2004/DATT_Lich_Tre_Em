@@ -28,19 +28,21 @@ import {
   requestNotificationPermission,
   scheduleAllNotifications,
 } from '../services/notificationApi';
+
+import { useChild } from '../context/ChildContext'; // Sử dụng context quản lý selectedChild
+
 const HomeScreen = () => {
   const navigation = useNavigation();
 
   const [children, setChildren] = useState([]);
-  const [selectedChild, setSelectedChild] = useState(null);
+  const { selectedChild, setSelectedChild } = useChild(); // Lấy selectedChild từ context
   const [schedules, setSchedules] = useState([]);
 
-  // Modal states
+  // Modal và form state
   const [modalVisible, setModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
 
-  // Form states (dùng chung cho thêm/sửa)
   const [activity, setActivity] = useState('');
   const [desc, setDesc] = useState('');
   const [startTime, setStartTime] = useState(new Date());
@@ -63,7 +65,7 @@ const HomeScreen = () => {
           const data = await getChildrenByUser(user._id);
           setChildren(data || []);
           if (data.length > 0) {
-            setSelectedChild(data[0]);
+            setSelectedChild(data[0]); // cập nhật context
           } else {
             setSelectedChild(null);
             setSchedules([]);
@@ -73,28 +75,27 @@ const HomeScreen = () => {
         }
       };
       fetchChildren();
-    }, [])
+    }, [setSelectedChild])
   );
 
-  // Lấy lịch trình khi chọn trẻ thay đổi
-useEffect(() => {
-  if (!selectedChild) {
-    setSchedules([]);
-    return;
-  }
-  const fetchSchedules = async () => {
-    try {
-      const data = await getSchedulesByChild(selectedChild._id);
-      setSchedules(data || []);
-      // Lên lịch thông báo khi có lịch trình mới
-      await requestNotificationPermission();
-      await scheduleAllNotifications(data || []);
-    } catch (error) {
-      console.error('Lỗi lấy lịch trình:', error);
+  // Lấy lịch trình khi selectedChild thay đổi
+  useEffect(() => {
+    if (!selectedChild) {
+      setSchedules([]);
+      return;
     }
-  };
-  fetchSchedules();
-}, [selectedChild]);
+    const fetchSchedules = async () => {
+      try {
+        const data = await getSchedulesByChild(selectedChild._id);
+        setSchedules(data || []);
+        await requestNotificationPermission();
+        await scheduleAllNotifications(data || []);
+      } catch (error) {
+        console.error('Lỗi lấy lịch trình:', error);
+      }
+    };
+    fetchSchedules();
+  }, [selectedChild]);
 
   // Reset form
   const resetForm = () => {
@@ -114,6 +115,7 @@ useEffect(() => {
     return `${h}:${m}`;
   };
 
+  // Thêm lịch trình
   const handleAdd = async () => {
     if (!selectedChild) {
       Alert.alert('Lỗi', 'Vui lòng chọn trẻ trước');
@@ -123,12 +125,11 @@ useEffect(() => {
       Alert.alert('Lỗi', 'Vui lòng nhập đủ thông tin bắt buộc');
       return;
     }
-
     try {
       await addSchedule(selectedChild._id, {
         activity,
         description: desc,
-        startTime: startTime.toISOString(), // backend convert sang Date
+        startTime: startTime.toISOString(),
         duration: Number(duration),
         repeat,
       });
@@ -144,13 +145,12 @@ useEffect(() => {
     }
   };
 
-  // Mở modal sửa, điền dữ liệu
+  // Mở modal sửa
   const openEditModal = (item) => {
     setEditingScheduleId(item._id);
     setActivity(item.activity);
     setDesc(item.description);
-    const dt = new Date(item.startTime);
-    setStartTime(dt);
+    setStartTime(new Date(item.startTime));
     setDuration(item.duration.toString());
     setRepeat(item.repeat);
     setEditModalVisible(true);
@@ -164,7 +164,6 @@ useEffect(() => {
       Alert.alert('Lỗi', 'Vui lòng nhập đủ thông tin bắt buộc');
       return;
     }
-
     try {
       await updateSchedule(editingScheduleId, {
         activity,
@@ -348,7 +347,10 @@ useEffect(() => {
               onPress={() => setShowTimePicker(true)}
               style={styles.timePickerButton}
             >
-              <Text>Thời gian bắt đầu: {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+              <Text>
+                Thời gian bắt đầu:{' '}
+                {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </Text>
             </TouchableOpacity>
 
             {showTimePicker && (
@@ -423,7 +425,10 @@ useEffect(() => {
               onPress={() => setShowTimePicker(true)}
               style={styles.timePickerButton}
             >
-              <Text>Thời gian bắt đầu: {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+              <Text>
+                Thời gian bắt đầu:{' '}
+                {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </Text>
             </TouchableOpacity>
 
             {showTimePicker && (
@@ -593,106 +598,88 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 20,
   },
   modalContent: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    width: '90%',
+    borderRadius: 12,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
   },
   modalTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-    fontSize: 20,
     marginBottom: 12,
-    textAlign: 'center',
   },
   modalInput: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#aaa',
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    padding: 10,
     marginBottom: 12,
   },
   timePickerButton: {
-    paddingVertical: 10,
-    marginBottom: 12,
-    borderRadius: 8,
+    padding: 12,
     borderWidth: 1,
-    borderColor: '#ccc',
-    justifyContent: 'center',
-    paddingHorizontal: 10,
+    borderColor: '#aaa',
+    borderRadius: 8,
+    marginBottom: 12,
   },
   selectBox: {
+    padding: 12,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#aaa',
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    marginBottom: 20,
-    justifyContent: 'center',
+    marginBottom: 12,
+    alignItems: 'center',
   },
   modalButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
   },
   cancelBtn: {
     backgroundColor: '#6c757d',
-    flex: 1,
-    marginRight: 8,
     paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 8,
-    alignItems: 'center',
+    marginRight: 10,
   },
   addBtn: {
     backgroundColor: '#198754',
-    flex: 1,
-    marginLeft: 8,
     paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 8,
-    alignItems: 'center',
   },
   dropdownList: {
     position: 'absolute',
-    top: 46,
+    top: 50,
     left: 0,
     right: 0,
-    backgroundColor: '#FFF',
+    backgroundColor: '#D1E7DD',
     borderRadius: 8,
-    elevation: 5,
+    zIndex: 100,
     maxHeight: 200,
-    zIndex: 999,
   },
   dropdownItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  dropdownItemText: {
-    marginLeft: 10,
-    fontSize: 16,
-    color: '#333',
+    padding: 8,
   },
   childImageSmall: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 12,
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: '#0F5132',
   },
   confirmBox: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    width: '80%',
+    marginHorizontal: 40,
     padding: 20,
-    alignItems: 'center',
+    borderRadius: 12,
   },
 });

@@ -12,15 +12,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { getPosts,deletePostByUser} from '../services/PostApi';
+import { getPosts, deletePostByUser } from '../services/PostApi';
 
-const filters = ['Tất cả', 'Chờ duyệt', 'Đã duyệt', 'Gia đình', 'Cộng đồng'];
+const filters = ['Chờ duyệt', 'Đã duyệt', 'Gia đình', 'Cộng đồng'];
 
 const PostScreen = () => {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
 
-  const [selectedFilter, setSelectedFilter] = useState('Tất cả');
+  const [selectedFilter, setSelectedFilter] = useState('Chờ duyệt');
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState(null);
@@ -32,36 +32,35 @@ const PostScreen = () => {
       if (userData) {
         const user = JSON.parse(userData);
         setUserId(user._id);
-        console.log('>> User ID:', user._id);
+        // console.log('>> User ID:', user._id);
       }
     } catch (error) {
       console.error('Lỗi lấy user:', error);
     }
   };
-// Gọi khi muốn xóa
-const confirmDelete = async (postId) => {
-  const userData = await AsyncStorage.getItem('user');
-  const user = JSON.parse(userData);
 
-  Alert.alert('Xác nhận', 'Bạn có chắc muốn xóa bài viết này?', [
-    { text: 'Hủy', style: 'cancel' },
-    {
-      text: 'Xóa',
-      style: 'destructive',
-      onPress: async () => {
-        try {
-          await deletePostByUser(postId, user._id);
-          Alert.alert('Đã xóa bài viết');
-          fetchPosts(); // reload lại danh sách bài viết
-        } catch (err) {
-  console.error('❌ Lỗi khi xóa bài viết:', err.response?.data || err.message);
-  Alert.alert('Lỗi', err.response?.data?.message || 'Xóa thất bại');
-}
+  // Xác nhận xóa bài viết
+  const confirmDelete = async (postId) => {
+    Alert.alert('Xác nhận', 'Bạn có chắc muốn xóa bài viết này?', [
+      { text: 'Hủy', style: 'cancel' },
+      {
+        text: 'Xóa',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deletePostByUser(postId, userId);
+            Alert.alert('Đã xóa bài viết');
+            fetchPosts(selectedFilter, userId);
+          } catch (err) {
+            console.error('❌ Lỗi khi xóa bài viết:', err.response?.data || err.message);
+            Alert.alert('Lỗi', err.response?.data?.message || 'Xóa thất bại');
+          }
+        },
       },
-    },
-  ]);
-};
-  // Fetch bài viết theo filter và userId
+    ]);
+  };
+
+  // Lấy bài viết theo filter và userId
   const fetchPosts = async (filter, uid) => {
     setLoading(true);
     try {
@@ -71,11 +70,11 @@ const confirmDelete = async (postId) => {
         params.trang_thai = filter.toLowerCase();
         if (uid) params.user = uid;
       } else if (filter === 'Gia đình') {
-        params.loai = 'gia đình';
-        if (uid) params.user = uid;
+        params.user = uid;        // Bài viết của user
+        params.loai = 'Gia đình'; // Loại gia đình
       } else if (filter === 'Cộng đồng') {
-        params.loai = 'cộng đồng';
-      } // 'Tất cả' thì không filter gì
+        params.loai = 'Cộng đồng'; // Bài viết tất cả user
+      }
 
       const data = await getPosts(params);
       setPosts(data || []);
@@ -143,17 +142,16 @@ const confirmDelete = async (postId) => {
         <ScrollView style={styles.listContainer}>
           {posts.map((post) => (
             <TouchableOpacity
-  key={post._id}
-  style={styles.postItem}
-  
-  onPress={() => {
-    if (post.user?._id === userId) {
-      confirmDelete(post._id);
-    } else {
-      Alert.alert('Không thể xóa', 'Bạn chỉ có thể xóa bài viết của mình.');
-    }
-  }}
->
+              key={post._id}
+              style={styles.postItem}
+              onPress={() => {
+                if (post.user?._id === userId) {
+                  confirmDelete(post._id);
+                } else {
+                  Alert.alert('Không thể xóa', 'Bạn chỉ có thể xóa bài viết của mình.');
+                }
+              }}
+            >
               <Ionicons
                 name="document-text-outline"
                 size={24}
@@ -173,7 +171,6 @@ const confirmDelete = async (postId) => {
               <Ionicons name="chevron-forward-outline" size={20} color="black" />
             </TouchableOpacity>
           ))}
-          
         </ScrollView>
       )}
 

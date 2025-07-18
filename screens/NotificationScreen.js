@@ -1,92 +1,143 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRoute } from '@react-navigation/native';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useChild } from '../context/ChildContext';
 import { getNotificationsByChild } from '../services/notificationApi';
 
 const NotificationScreen = () => {
-  const route = useRoute();
-  const childId = 
-'686e8e4a3439d61115567b6a';
-
+  const { selectedChild } = useChild();
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!childId) {
-      setLoading(false);
-      return;
-    }
-    const fetchNotifications = async () => {
-      try {
-        const data = await getNotificationsByChild(childId);
-        console.log('Notifications fetched:', data);
-        setNotifications(data);
-      } catch (error) {
-        console.error('Lỗi khi lấy thông báo:', error);
-      } finally {
-        setLoading(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!selectedChild) {
+        setNotifications([]);
+        return;
       }
-    };
 
-    const intervalId = setInterval(fetchNotifications, 30000); 
+      const fetchNotifications = async () => {
+        try {
+          setLoading(true);
+          const data = await getNotificationsByChild(selectedChild._id);
+          setNotifications(data || []);
+        } catch (error) {
+          Alert.alert('Lỗi', 'Không thể tải thông báo. Vui lòng thử lại.');
+          console.error('Lỗi lấy thông báo:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-  return () => clearInterval(intervalId); 
-  }, [childId]);
+      fetchNotifications();
+    }, [selectedChild])
+  );
 
-  const formatTime = (isoTime) => {
-    const date = new Date(isoTime);
-    return date.toLocaleString('vi-VN', {
+  const renderItem = ({ item }) => {
+    const timeString = new Date(item.thoi_gian).toLocaleString('vi-VN', {
       hour: '2-digit',
       minute: '2-digit',
       day: '2-digit',
       month: '2-digit',
     });
+
+    return (
+      <View style={styles.card}>
+        <Text style={styles.content}>{item.noi_dung}</Text>
+        <Text style={styles.time}>{timeString}</Text>
+      </View>
+    );
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Thông báo</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Thông báo</Text>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#000" />
-      ) : notifications.length === 0 ? (
-        <Text style={styles.noNotificationsText}>Không có thông báo nào.</Text>
-      ) : (
-        <ScrollView style={styles.listContainer}>
-          {notifications.map((item) => (
-            <View key={item._id} style={styles.notificationItem}>
-              <View style={styles.iconWrapper}>
-                <Ionicons name="notifications-outline" size={24} color="#000" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.time}>{formatTime(item.thoi_gian)}</Text>
-                <Text style={styles.message}>{item.noi_dung}</Text>
-              </View>
-            </View>
-          ))}
-        </ScrollView>
-      )}
-    </View>
+        {loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color="#198754" />
+          </View>
+        ) : !selectedChild ? (
+          <View style={styles.center}>
+            <Text style={styles.message}>Vui lòng chọn trẻ để xem thông báo.</Text>
+          </View>
+        ) : notifications.length === 0 ? (
+          <View style={styles.center}>
+            <Text style={styles.message}>Không có thông báo nào.</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={notifications}
+            keyExtractor={(item) => item._id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.list}
+          />
+        )}
+      </View>
+    </SafeAreaView>
   );
 };
 
 export default NotificationScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 24, paddingTop: 60 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  listContainer: { flex: 1 },
-  notificationItem: {
-    backgroundColor: '#f4f4f4',
-    borderRadius: 12,
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F0F2F5',
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 12,
+    textAlign: 'center',
+    color: '#333',
+  },
+  list: {
+    paddingBottom: 16,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
     padding: 16,
     marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
-  iconWrapper: { marginRight: 12, marginTop: 4 },
-  time: { fontWeight: '600', marginBottom: 4, color: '#000' },
-  message: { color: '#333', fontSize: 14 },
-  noNotificationsText: { textAlign: 'center', marginTop: 20, fontSize: 16, color: '#666' },
+  content: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 8,
+  },
+  time: {
+    fontSize: 13,
+    color: '#777',
+    textAlign: 'right',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  message: {
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
+  },
 });
