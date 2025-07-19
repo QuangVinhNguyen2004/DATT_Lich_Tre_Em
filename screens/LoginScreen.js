@@ -28,37 +28,54 @@ const handleLogin = async () => {
   try {
     console.log('🔐 Thử đăng nhập tài khoản chính...');
 
-    // Thử đăng nhập bằng tài khoản chính
-    const main = await loginUser({ email, password }); // gọi /auth/login
+    // Thử đăng nhập tài khoản chính
+    const main = await loginUser({ email, password });
 
-    if (main) {
-      if (main.status === 'private') {
-        Alert.alert('Lỗi', 'Tài khoản chính đã bị khóa');
-        return;
-      }
-
-      await AsyncStorage.setItem('user', JSON.stringify({
-        ...main,
-        accountType: 'main',
-      }));
-
-      const children = await getChildrenByUser(main._id);
-
-      Alert.alert('Thành công', `Xin chào ${main.name}`);
-      if (children.length === 0) {
-        navigation.navigate('AddChild');
-      } else {
-        navigation.navigate('Menu');
-      }
+    // Nếu đăng nhập thành công, kiểm tra trạng thái tài khoản
+    if (main.status === 'private') {
+      Alert.alert('Lỗi', 'Tài khoản chính đã bị khóa');
       return;
     }
+
+    await AsyncStorage.setItem('user', JSON.stringify({
+      ...main,
+      accountType: 'main',
+    }));
+
+    const children = await getChildrenByUser(main._id);
+
+    Alert.alert('Thành công', `Xin chào ${main.name}`);
+    if (children.length === 0) {
+      navigation.navigate('AddChild');
+    } else {
+      navigation.navigate('Menu');
+    }
+
+    return; // Dừng tại đây nếu đăng nhập chính thành công
   } catch (err) {
-    console.log('🟡 Không phải tài khoản chính. Thử đăng nhập phụ...');
+    const status = err?.response?.status;
+    const msg = err?.response?.data?.message;
+
+    // Nếu là lỗi do bị khóa
+    if (status === 403 && msg === 'Tài khoản đã bị khóa') {
+      Alert.alert('Lỗi', 'Tài khoản chính đã bị khóa');
+      return;
+    }
+
+    // Nếu là lỗi tài khoản không tồn tại hoặc sai mật khẩu
+    if (status === 400 && msg === 'Tài khoản không tồn tại') {
+      console.log('🟡 Không phải tài khoản chính. Thử đăng nhập phụ...');
+    } else {
+      // Các lỗi khác
+      console.error('❌ Lỗi đăng nhập:', msg || err.message);
+      Alert.alert('Lỗi', msg || 'Đăng nhập thất bại. Vui lòng thử lại.');
+      return;
+    }
   }
 
-  // Nếu không phải tài khoản chính, thử đăng nhập phụ
+  // Thử đăng nhập tài khoản phụ
   try {
-    const res = await loginSubUser({ email, password }); // gọi /sub-users/login
+    const res = await loginSubUser({ email, password });
     const user = res.subUser;
 
     if (!user) {
@@ -86,11 +103,12 @@ const handleLogin = async () => {
     Alert.alert('Thành công', `Xin chào ${user.name}`);
     navigation.navigate('Menu');
   } catch (err) {
-    console.error('❌ Lỗi đăng nhập:', err?.response?.data || err.message);
-    const msg = err?.response?.data?.error || 'Đăng nhập thất bại. Vui lòng thử lại.';
+    console.error('❌ Lỗi đăng nhập phụ:', err?.response?.data || err.message);
+    const msg = err?.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
     Alert.alert('Lỗi', msg);
   }
 };
+
 
 
 

@@ -49,7 +49,7 @@ export default function UpdateAccountScreen({ navigation, route }) {
         setName(user.name || '');
         setPhone(user.phone || '');
         setEmail(user.email || '');
-        setImgUrl(user.imgUrl || ''); // chú ý dùng imgUrl trùng với schema
+        setImgUrl(user.imgUrl || ''); 
       }
     })();
   }, []);

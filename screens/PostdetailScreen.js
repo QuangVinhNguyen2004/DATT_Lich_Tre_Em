@@ -53,8 +53,6 @@ const PostDetailScreen = ({ route }) => {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-
-
       {/* Video nếu có */}
       {post.video ? (
         <Video
@@ -73,7 +71,7 @@ const PostDetailScreen = ({ route }) => {
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.imageScroll}
-          contentContainerStyle={{ paddingHorizontal: 8 }}
+          contentContainerStyle={{ paddingHorizontal: 12 }}
         >
           {post.anh.map((imgUrl, index) => (
             <Image
@@ -85,11 +83,15 @@ const PostDetailScreen = ({ route }) => {
           ))}
         </ScrollView>
       )}
-        <Text style={styles.title}>{post.tieu_de}</Text>
-      <Text style={styles.category}>Loại: {post.loai || 'Không xác định'}</Text>
-      <Text style={styles.status}>Trạng thái: {post.trang_thai || 'Không rõ'}</Text>
 
-      <Text style={styles.content}>Nội dung:{post.noi_dung}</Text>
+      <Text style={styles.title}>{post.tieu_de}</Text>
+
+      <View style={styles.infoRow}>
+        <Text style={styles.category}>Loại: {post.loai || 'Không xác định'}</Text>
+        <Text style={styles.status}>Trạng thái: {post.trang_thai || 'Không rõ'}</Text>
+      </View>
+
+      <Text style={styles.content}>{post.noi_dung}</Text>
     </ScrollView>
   );
 };
@@ -100,7 +102,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   center: {
     flex: 1,
@@ -112,43 +115,46 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   title: {
-    fontSize: 26,
-    fontWeight: '700',
-    marginBottom: 6,
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 8,
     color: '#222',
   },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
   category: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     color: '#555',
-    marginBottom: 2,
   },
   status: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     color: '#007AFF',
-    marginBottom: 12,
   },
   content: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#333',
-    lineHeight: 24,
-    marginBottom: 24,
+    lineHeight: 28,
+    marginBottom: 32,
   },
   video: {
     width: '100%',
-    height: 220,
-    borderRadius: 12,
+    height: 200,
+    borderRadius: 14,
     marginBottom: 24,
     backgroundColor: '#000',
   },
   imageScroll: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
   image: {
-    width: screenWidth * 0.7,
-    height: 220,
-    borderRadius: 12,
-    marginRight: 12,
+    width: screenWidth * 0.6,
+    height: 160,
+    borderRadius: 14,
+    marginRight: 16,
   },
 });
